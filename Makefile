@@ -1,5 +1,5 @@
 #Object files to produce and link together
-e = intp.o numbers.o input_data.o states.o elasticdcs.o totalcs.o tcstostate.o sdcs.o PsFormation.o montecarlo.o  simulation.o  main.o
+e = intp.o numbers.o input_data.o states.o elasticdcs.o totalcs.o tcstostate.o sdcs.o PsFormation.o montecarlo.o ParticleDynamics.o simulation.o main.o
 
 ###-------------------------------ifort compiler setup------------------------------###
 ###DEBUGGING###
@@ -90,7 +90,10 @@ intp.o : intp.f
 montecarlo.o : montecarlo.f90 numbers.f90 input_data.f90 totalcs.f90 states.f90
 	$(FC) $a -c montecarlo.f90
 
-simulation.o : simulation.f90 numbers.f90  montecarlo.f90 input_data.f90 totalcs.f90 states.f90
+ParticleDynamics.o : ParticleDynamics.f90 numbers.f90  montecarlo.f90 input_data.f90 totalcs.f90 states.f90 simulation.f90
+	$(FC) $a -c ParticleDynamics.f90
+
+simulation.o : simulation.f90 numbers.f90  montecarlo.f90 input_data.f90 totalcs.f90 states.f90 ParticleDynamics.f90
 	$(FC) $a -c simulation.f90
 
 PsFormation.o : PsFormation.f90 numbers.f90 simulation.f90 montecarlo.f90

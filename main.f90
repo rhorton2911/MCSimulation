@@ -112,13 +112,11 @@ program main
         end do
         TICS(ii) = intVal
      end do 
-     
 
      !Read in table of benchmark fit parameters for H2 excitations and 
      !single state treatment of dissociative ionisation.
      !Also include approximate CS for v=1, v=2 ground state
      !excitations.
-
      min_ein = statebasis%b(2)%enex
      print*, "BEFORE: ", statebasis%b(2)%enex
      allocate(tempArray(sdcsBasis%Nein))

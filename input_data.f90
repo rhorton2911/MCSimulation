@@ -5,16 +5,16 @@ module input_data
 
 
   type input
-     character(len=10):: target          ! target label
-     real(dp):: energy             ! incident energy in au
+         character(len=10):: target          ! target label
+         real(dp):: energy             ! incident energy in au
          real(dp):: energyeV        ! incident energy in eV
          real(dp):: density         ! Density of the medium 
-	 integer:: totalSims        ! total number of simulations
+	       integer:: totalSims        ! total number of simulations
          integer:: debugOp          ! Debug option, runs tests on cross sections, printing results to files.
          integer:: totalVariations  !total number of time to vary input parameters for unceratainty propagation
          integer:: numToWrite     !Number of simulations to write to file for visualization.
          integer:: benchmarkOp    !run using benchmark cross sections (0 = don't run, 1 = use Garvey and Green CS) 
-	 character(len=40):: ionop     ! ionisation option
+	       character(len=40):: ionop     ! ionisation option
          integer:: sdcsScaleOp    !OPtion of whether or not to scale SDCS
          integer:: stateIonop     !Choice to symmetrise +ve E pseudostate cross sections
          integer:: angleop        !scattering angle option. 1 = average, 2= distribution
@@ -29,8 +29,8 @@ module input_data
          integer:: elScale        !elastic scattering CS scaling option for sensitivity analysis
          integer:: inelScale      !inelastic scattering CS scaling option for sensitivity analysis
          integer:: ionScale       !ionisation CS scaling option for sensitivity analysis
-     integer:: Ntype              ! number of data types (positron, electron, etc...) 
-     integer:: tcstype            ! type of totalcs files, 1 for Molecules,...
+         integer:: Ntype              ! number of data types (positron, electron, etc...) 
+         integer:: tcstype            ! type of totalcs files, 1 for Molecules,...
      character(len=50):: DATApath      ! path to the folder with the data on given type of particle
      character(len=40):: DATApathVcs   ! path to folder with vibrational cross sections for e-H2
      character(len=40):: DATApathdcsinel  !Path to inelastic dcs files 
@@ -68,87 +68,87 @@ module input_data
 contains
 
   subroutine readin( self, nfile,iwrite )
-    implicit none
-    type(input):: self
-    integer, intent(in):: nfile
-    integer, intent(in):: iwrite  ! if =1 write to screen the read data, =0 no writing to screen
-    real(dp):: eV, en_eV
-    logical:: ex
-    integer:: iostat_data, itcstype, iaddtcstype, idftype, isdcstype
-    character(len=20):: mode
-    character(len=60)::tempDataPath
+      implicit none
+      type(input):: self
+      integer, intent(in):: nfile
+      integer, intent(in):: iwrite  ! if =1 write to screen the read data, =0 no writing to screen
+      real(dp):: eV, en_eV
+      logical:: ex
+      integer:: iostat_data, itcstype, iaddtcstype, idftype, isdcstype
+      character(len=20):: mode
+      character(len=60)::tempDataPath
 
-    eV = self%eV  !  27.2116
+      eV = self%eV  !  27.2116
+      
+      if(nfile .eq. 10) then
+         inquire(file='data.in',exist=ex)
+         if(.not. ex) then
+            print*,'File data.in does not exists. STOP'
+            STOP
+         end if
+         open(nfile,file='data.in',iostat=iostat_data,action='read')
+         if(iostat_data.ne.0) then
+            print*, '********  File  canot open file data.in'
+            stop
+         end if
+      endif
+      
+      read(nfile,*) mode
+      !if(iwrite .eq. 1) write(*,*) 'PsFormationBenchmark: ', self%benchmark 
+      if(mode .eq. 'PsBenchmarkTest') then
+         self%benchmark = .true.
+      else
+         self%benchmark = .false.
+      end if
+      if(iwrite .eq. 1) write(*,*) 'mode: ', mode
     
-    if(nfile .eq. 10) then
-       inquire(file='data.in',exist=ex)
-       if(.not. ex) then
-          print*,'File data.in does not exists. STOP'
-          STOP
-       end if
-       open(nfile,file='data.in',iostat=iostat_data,action='read')
-       if(iostat_data.ne.0) then
-          print*, '********  File  canot open file data.in'
-          stop
-       end if
-    endif
+      read(nfile,'(A10)') self%target
+      if(iwrite .eq. 1) write(*,*) 'target: ', self%target
+
+      en_eV = 0d0
+      read(nfile,*) en_eV
+    	self%energyeV = en_eV
+      self%energy = en_eV / eV   ! convert to atomic units
+      if(iwrite .eq. 1) write(*,*) 'energy: ', en_eV , ' eV'
+
+     	read(nfile,*) self%totalSims
+     	if(iwrite .eq. 1) write(*,*) 'totalSims: ', self%totalSims
+   
+      read(nfile,*) self%debugOp
+      if(iwrite .eq. 1) write(*,*) 'debugOp: ', self%debugOp
+
+    	read(nfile,*) self%totalVariations
+    	if(iwrite .eq. 1) write(*,*) 'totalVariations: ', self%totalVariations
     
-    read(nfile,*) mode
-    !if(iwrite .eq. 1) write(*,*) 'PsFormationBenchmark: ', self%benchmark 
-    if(mode .eq. 'PsBenchmarkTest') then
-       self%benchmark = .true.
-    else
-       self%benchmark = .false.
-    end if
-    if(iwrite .eq. 1) write(*,*) 'mode: ', mode
+    	read(nfile,*) self%numToWrite
+    	if(iwrite .eq. 1) write(*,*) 'numToWrite: ', self%numToWrite
+    
+    	read(nfile,*) self%benchmarkOp
+    	if(iwrite .eq. 1) write(*,*) 'benchmarkOp: ', self%benchmarkOp
+  
+      read(nfile,*) self%density	 
+    	if(iwrite .eq. 1) write(*,*) 'density: ', self%density
+
+      read(nfile,*) self%angleop
+      if(iwrite .eq. 1) write(*,*) 'angleop: ', self%angleop
+
+      read(nfile,*) self%dicsop
+      if(iwrite .eq. 1) write(*,*) 'dicsop: ', self%dicsop
+
+      read(nfile,*) self%enlossop
+      if(iwrite .eq. 1) write(*,*) 'enlossop: ', self%enlossop
+
+      read(nfile,*) self%momOp
+      if(iwrite .eq. 1) write(*,*) 'momOp: ', self%momOp
 	
-    read(nfile,'(A10)') self%target
-    if(iwrite .eq. 1) write(*,*) 'target: ', self%target
+    	read(nfile,*) self%ionop
+    	if(iwrite .eq. 1) write(*,*) 'ionop: ', self%ionop
 
-    en_eV = 0d0
-    read(nfile,*) en_eV
-	self%energyeV = en_eV
-    self%energy = en_eV / eV   ! convert to atomic units
-    if(iwrite .eq. 1) write(*,*) 'energy: ', en_eV , ' eV'
+      read(nfile,*) self%sdcsScaleOp
+      if(iwrite .eq. 1) write(*,*) 'sdcsScaleOp: ', self%sdcsScaleOp
 
-	read(nfile,*) self%totalSims
-	if(iwrite .eq. 1) write(*,*) 'totalSims: ', self%totalSims
- 
-        read(nfile,*) self%debugOp
-        if(iwrite .eq. 1) write(*,*) 'debugOp: ', self%debugOp
-
-	read(nfile,*) self%totalVariations
-	if(iwrite .eq. 1) write(*,*) 'totalVariations: ', self%totalVariations
-
-	read(nfile,*) self%numToWrite
-	if(iwrite .eq. 1) write(*,*) 'numToWrite: ', self%numToWrite
-
-	read(nfile,*) self%benchmarkOp
-	if(iwrite .eq. 1) write(*,*) 'benchmarkOp: ', self%benchmarkOp
-
-        read(nfile,*) self%density	 
-	if(iwrite .eq. 1) write(*,*) 'density: ', self%density
-
-        read(nfile,*) self%angleop
-        if(iwrite .eq. 1) write(*,*) 'angleop: ', self%angleop
-
-        read(nfile,*) self%dicsop
-        if(iwrite .eq. 1) write(*,*) 'dicsop: ', self%dicsop
-
-        read(nfile,*) self%enlossop
-        if(iwrite .eq. 1) write(*,*) 'enlossop: ', self%enlossop
-
-        read(nfile,*) self%momOp
-        if(iwrite .eq. 1) write(*,*) 'momOp: ', self%momOp
-	
-	read(nfile,*) self%ionop
-	if(iwrite .eq. 1) write(*,*) 'ionop: ', self%ionop
-
-        read(nfile,*) self%sdcsScaleOp
-        if(iwrite .eq. 1) write(*,*) 'sdcsScaleOp: ', self%sdcsScaleOp
-
-        read(nfile,*) self%stateIonop 
-	if(iwrite .eq. 1) write(*,*) 'stateIonop: ', self%stateIonop
+      read(nfile,*) self%stateIonop 
+    	if(iwrite .eq. 1) write(*,*) 'stateIonop: ', self%stateIonop
 
         read(nfile,*) self%distortSdcsOp
 	if(iwrite .eq. 1) write(*,*) 'distortSdcsOp: ', self%distortSdcsOp

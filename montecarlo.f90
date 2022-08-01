@@ -5,14 +5,14 @@ module mc
 	
     type, public:: particle
         real(dp),dimension(0:30000):: energy ! The energy at each collision
-	real(dp),dimension(0:30000):: enArr ! The energy target energy at each collision
-	integer:: gen ! Which generation the particle was created in
-	integer:: colls ! Total number of collisions the particle undergoes
-	integer,dimension(0:30000):: state ! The state selected at each collision
-	logical,dimension(0:30000):: diss	! True if dissociation occured at that collision
-	!real(dp),dimension(0:70000):: costheta ! Cosine of the scattering angle at each collision 
+      	real(dp),dimension(0:30000):: enArr ! The energy target energy at each collision
+      	integer:: gen ! Which generation the particle was created in
+      	integer:: colls ! Total number of collisions the particle undergoes
+      	integer,dimension(0:30000):: state ! The state selected at each collision
+      	logical,dimension(0:30000):: diss	! True if dissociation occured at that collision
+      	!real(dp),dimension(0:70000):: costheta ! Cosine of the scattering angle at each collision 
         !real(dp),dimension(0:70000):: phi     !Azimuthal scattering angle randomly generated after each collision	
-	logical,dimension(0:30000):: Ps	! True if Ps Formation occured at that collision (only used for Ps Formation Benchmark Simulation)
+      	logical,dimension(0:30000):: Ps	! True if Ps Formation occured at that collision (only used for Ps Formation Benchmark Simulation)
         !real(dp),dimension(0:70000)::path !Stores path length after each collisions	
                  
 
@@ -21,6 +21,10 @@ module mc
         real(dp),dimension(0:30000)::y
         real(dp),dimension(0:30000)::z
         real(dp),dimension(0:30000)::time
+    		real(dp),dimension(0:30000)::velx
+    		real(dp),dimension(0:30000)::vely
+    		real(dp),dimension(0:30000)::velz
+    		real(dp),dimension(0:30000)::abs_vel
  
         !Stores unit vectors in coordinate system attached to each collision,
         !where the new zHat is along the final particle trajectory.
@@ -31,32 +35,32 @@ module mc
 	
     type, public:: simdata ! Data for the simulation of ONE incident particle
         integer:: secE ! total number of secondary electrons created in this simulation (num of ionisations)		
-	integer:: excite ! total number of excitation collisions created in this simulation
-	integer:: elastic ! total number of elastic collisions created in this simulation
-	integer:: dissociations ! total number of dissociations in this simulation
-	integer:: gen ! total number of sec E generations created in this simulation
-	integer:: genIndex ! Current generation 
+      	integer:: excite ! total number of excitation collisions created in this simulation
+      	integer:: elastic ! total number of elastic collisions created in this simulation
+      	integer:: dissociations ! total number of dissociations in this simulation
+      	integer:: gen ! total number of sec E generations created in this simulation
+      	integer:: genIndex ! Current generation 
         real(dp):: inERad  !Final radial distance of the incident electron
         integer:: B1SuExc  !total number of excitations of the B1Su state of H2 in this simulation
         integer:: C1PuExc     !total number of excitations of the C1Pu state of H2 in this simulation
         integer:: singletExc  !total number of singlet H2 excitations in this simulation
         integer:: tripletExc !total number of triplet H2 excitations in this simulation
-	integer,dimension(1000):: ePerGen ! Number of electrons in each generation
-	real(dp),dimension(1000):: enPerGen ! Total energy of electrons in each generation
-	integer,dimension(0:1000):: dissPerGen ! Dissociation count per generation
-	!integer,dimension(0:1000):: ionPerGen ! number of ionisations in each gen 
-	integer,dimension(0:1000):: excPerGen ! number of excitation collisions in each gen
-	integer,dimension(0:1000):: elPerGen ! number of elastic collisions in each gen 
-	integer,dimension(0:1000):: collPerGen ! number of collisions in each gen 
+      	integer,dimension(1000):: ePerGen ! Number of electrons in each generation
+      	real(dp),dimension(1000):: enPerGen ! Total energy of electrons in each generation
+      	integer,dimension(0:1000):: dissPerGen ! Dissociation count per generation
+      	!integer,dimension(0:1000):: ionPerGen ! number of ionisations in each gen 
+      	integer,dimension(0:1000):: excPerGen ! number of excitation collisions in each gen
+      	integer,dimension(0:1000):: elPerGen ! number of elastic collisions in each gen 
+      	integer,dimension(0:1000):: collPerGen ! number of collisions in each gen 
 	       
         !Data recorded for program consistency checks
         real(dp), dimension(0:1000):: ejEnGrid !Grid of ejection energies in ionisation
         integer,dimension(0:1000):: numEj !Number of ionisations at a given energy in above grid 	
 				
-	! For Ps Benchmark Simulation
-	logical:: PsFormed ! True if Positronium is Formed (exit condition for simulation loop)
-	integer:: numPsFormed
-	real(dp) :: duration,tResTemp,tRes
+      	! For Ps Benchmark Simulation
+      	logical:: PsFormed ! True if Positronium is Formed (exit condition for simulation loop)
+      	integer:: numPsFormed
+      	real(dp) :: duration,tResTemp,tRes
 
         !Newer energy deposition parameters
         real(dp):: W   !Energy per ion pair 
@@ -64,6 +68,7 @@ module mc
         real(dp):: tripIonPair  !Triplet excitations per ion pair
         real(dp):: B1SuIonPair  !B1Su excitations per ion pair
         real(dp):: C1PuIonPair  !C1Pu excitations per ion pair
+
         integer:: groundv1 !Number of X1Sg(v=1) excitations
         integer:: groundv2 !Number of X1Sg(v=2) excitations
         real(dp):: groundRatio  !Ratio of X1Sg(v=2) to (v=1) excitations
@@ -121,20 +126,20 @@ contains
     subroutine init_particle(self,initE,gen,xIn,yIn,zIn,tIn) ! Initialise particle values
         implicit none
         type(particle),intent(inout):: self
-	real(dp),intent(in):: initE
-	integer,intent(in):: gen
+      	real(dp),intent(in):: initE
+      	integer,intent(in):: gen
         real(dp)::xIn, yIn, zIn, tIn !Initial particle coordinates
 		
-	self%energy(:) = 0.0
-	self%state(:) = 0
-	self%diss(:) = .FALSE.
-	!self%costheta(:) = 0.0
-	self%Ps(:) = .FALSE.
+      	self%energy(:) = 0.0
+      	self%state(:) = 0
+      	self%diss(:) = .FALSE.
+      	!self%costheta(:) = 0.0
+      	self%Ps(:) = .FALSE.
         !self%path(:) = 0.0
 			
-	self%energy(0) = initE
-	self%gen = gen		
-	self%colls = 0
+       	self%energy(0) = initE
+       	self%gen = gen		
+       	self%colls = 0
 
         self%x(0) = xIn
         self%y(0) = yIn
@@ -155,21 +160,21 @@ contains
 	
     subroutine init_simdata(self) ! Initialise data for ONE simulation
         implicit none
-	type(simdata), intent(inout):: self
-	integer:: i
+      	type(simdata), intent(inout):: self
+      	integer:: i
         real(dp):: en	
 	
-	self%secE = 0
-	self%gen = 0
-	self%excite = 0
-	self%elastic = 0
-	self%dissociations = 0
+      	self%secE = 0
+      	self%gen = 0
+      	self%excite = 0
+      	self%elastic = 0
+      	self%dissociations = 0
 		
-	self%PsFormed = .false.
-	self%numPsFormed = 0
-	self%duration = 0.0
-	self%tResTemp = 0.0
-	self%tRes = 0.0
+      	self%PsFormed = .false.
+      	self%numPsFormed = 0
+      	self%duration = 0.0
+      	self%tResTemp = 0.0
+      	self%tRes = 0.0
                 
         self%B1SuExc = 0
         self%C1PuExc = 0
@@ -284,26 +289,26 @@ contains
         use dcs_module
         implicit none
 		
-	type(basis_state),intent(in):: statebasis
-	type(state):: selstate
+      	type(basis_state),intent(in):: statebasis
+      	type(state):: selstate
         type(basis_sdcs)::sdcsBasis
         type(sdcs)::sdcsAtEIn
-	integer, intent(in):: stateNum
-	type(particle),dimension(0:1000),intent(inout):: particlebasis
-	integer,intent(in):: partNum,coll, enlossop
-	character (len=60),intent(in):: ionop ! Ionistation option
-	type(totalcs):: tcs ! used to calculate the mean excitation energy
-	type(simdata), intent(inout):: datasim		
-	real(dp):: enex,en ! excitation and ionisation energy (eV)
-	real(dp):: meanexc ! mean excitation energy (eV)
-	real(dp):: elEnergyLoss	  ! energy lost by incident particle (eV)
+      	integer, intent(in):: stateNum
+      	type(particle),dimension(0:1000),intent(inout):: particlebasis
+      	integer,intent(in):: partNum,coll, enlossop
+      	character (len=60),intent(in):: ionop ! Ionistation option
+      	type(totalcs):: tcs ! used to calculate the mean excitation energy
+      	type(simdata), intent(inout):: datasim		
+      	real(dp):: enex,en ! excitation and ionisation energy (eV)
+      	real(dp):: meanexc ! mean excitation energy (eV)
+      	real(dp):: elEnergyLoss	  ! energy lost by incident particle (eV)
         real(dp):: inElEnergyLoss   !energy loss in inelastic scattering, includes internal energy
         real(dp):: ejEn, secE, primaryE, eIon, ejEnSelected, eIn,cosangle
         logical:: indist
-	! For Ps Benchmark Simulation
-	type(PsVar),intent(in):: VarPs 
-	logical,intent(in):: bmode
-        ! For debugging
+      	! For Ps Benchmark Simulation
+      	type(PsVar),intent(in):: VarPs 
+      	logical,intent(in):: bmode
+              ! For debugging
         integer:: stateNumDebug
         logical:: debug
         type(totalcs)::tcsDebug
@@ -313,7 +318,7 @@ contains
         eIon = 15.96632_dp !Ionisation energy of ground state H2 (eV)	
         eIn = particlebasis(partNum)%energy(coll)
 
-	! The state that has been selected
+      	! The state that has been selected
         !Note that tcs stores energy in a.u, not eV
         en = 0.0_dp
         if (data_in%stateIonop .eq. 1) then
@@ -331,14 +336,15 @@ contains
            en = selstate%en
         end if
         call getIndist(bmode,indist) 	
-	!print*, 'particle',partNum,'gen',particlebasis(partNum)%gen,'coll',coll
-	!print*, 'enex',enex
-	!print*, 'preCollEnergy',particlebasis(partNum)%energy(coll)
-	
-	!print*, 'el cs', tcs%CS(1)
-	!print*, 'exc cs', tcs%CS(2)
-	!print*, 'ion cs', tcs%CS(3)
-	!print*, 'Ps cs', tcs%CS(4)
+
+      	!print*, 'particle',partNum,'gen',particlebasis(partNum)%gen,'coll',coll
+      	!print*, 'enex',enex
+      	!print*, 'preCollEnergy',particlebasis(partNum)%energy(coll)
+      	
+      	!print*, 'el cs', tcs%CS(1)
+      	!print*, 'exc cs', tcs%CS(2)
+      	!print*, 'ion cs', tcs%CS(3)
+      	!print*, 'Ps cs', tcs%CS(4)
         particlebasis(partNum)%enArr(coll) = en
 
 	if (stateNum == 1) then ! elastic collision					
@@ -704,23 +710,23 @@ contains
     subroutine dissociation(part,statebasis,stateNum,dicsBasis,tcs,datasim,data_input,coll,partNum)
         use input_data
         use state_class
-	use totalcs_module	
-	implicit none
+      	use totalcs_module	
+      	implicit none
 		
         type(input)::data_input
-	type(particle),intent(inout):: part
-	type(totalcs),intent(in):: tcs
+      	type(particle),intent(inout):: part
+      	type(totalcs),intent(in):: tcs
         type(basis_state),intent(in)::statebasis
         integer,intent(in):: stateNum, coll, partNum
         type(basis_dics),intent(in)::dicsBasis
         type(state)::selstate
         type(simdata), intent(inout):: datasim		
         logical:: diss	! True if dissociation occurs
-	real(dp):: df, randNum, en, enIncident, dissEn
+	      real(dp):: df, randNum, en, enIncident, dissEn
                 
         dissEn = 0.0d0	
         enIncident = part%energy(coll)
-	en=0.0_dp
+	      en=0.0_dp
 
         !Find energy of selected state
         if (data_in%stateIonop .eq. 1) then
@@ -729,9 +735,9 @@ contains
            selstate = statebasis%b(stateNum)
            en = selstate%en
         end if
- 
+
         ! Assume dissociation does not occur until proven otherwise
-	diss = .FALSE.		
+	      diss = .FALSE.		
         df = 0.0   
 
         if (data_input%benchmarkOp .eq. 1) then
@@ -743,7 +749,7 @@ contains
            else if (data_input%dicsop .eq. 2) then
               if ((en <0.0_dp) .and. (statebasis%b(stateNum)%ion .eqv. .false.) ) then	
                  !excitation collision
-	         df = tcs%df(stateNum)
+	            df = tcs%df(stateNum)
               else if ((en >0.0_dp) .and. (statebasis%b(stateNum)%ion .eqv. .true.)) then
                  !Ionisation collision uses dissociative 
                  !ionisation cross sections.            
@@ -754,10 +760,10 @@ contains
 
 
         ! Random Number is selected between 0 and 1
-	call RANDOM_NUMBER(randNum)
+      	call RANDOM_NUMBER(randNum)
 		
         ! Sample to see if dissociation occurs
-	if(randNum .lt. df) then
+      	if(randNum .lt. df) then
            diss = .TRUE.
            part%diss(coll) = .true.
         else
@@ -773,13 +779,12 @@ contains
 
            if (statebasis%b(stateNum)%stlabel .eq. 'C1Pu') then
               datasim%C1PuDiss = datasim%C1PuDiss + 1
-	      !print*, "BOOGALOO"
            else if (statebasis%b(stateNum)%stlabel .eq. 'B1Su') then
               datasim%B1SuDiss = datasim%B1SuDiss + 1
            else if (statebasis%b(stateNum)%stlabel .eq. 'b3Su') then
               datasim%b3SuDiss = datasim%b3SuDiss + 1
            end if  
-	end if
+	      end if
   
         !If enex - dissThresh > 0, this is a dissociative pseudostate, record energy release
         !print*, "ENEX, THRESH: ", statebasis%b(stateNum)%enex, statebasis%b(stateNum)%dissThresh
@@ -799,32 +804,32 @@ contains
         !end if
 	
         !print*, 'df = ', df
-	!print*, 'randNum = ', randNum
-	!print*, 'diss = ', diss
+      	!print*, 'randNum = ', randNum
+      	!print*, 'diss = ', diss
         !print*, 'colls = ', part%colls, coll
-	part%diss(part%colls) = diss		
-	if(diss .eqv. .true.) then ! Update how many dissociations have occured for this generation.
-	   datasim%dissPerGen(part%gen) = datasim%dissPerGen(part%gen) + 1
-	   datasim%dissociations = datasim%dissociations + 1
-	end if
-	!print*, 'diss tally ',datasim%dissPerGen(part%gen)
+      	part%diss(part%colls) = diss		
+      	if(diss .eqv. .true.) then ! Update how many dissociations have occured for this generation.
+      	   datasim%dissPerGen(part%gen) = datasim%dissPerGen(part%gen) + 1
+      	   datasim%dissociations = datasim%dissociations + 1
+      	end if
+      	!print*, 'diss tally ',datasim%dissPerGen(part%gen)
     end subroutine dissociation
 
 	
     subroutine collectdata(datasim,maxgen,datamc,data_input)
         use input_data
         implicit none
-	integer,intent(in):: maxgen
+	      integer,intent(in):: maxgen
         type(input):: data_input
-	type(simdata),intent(in):: datasim
-	type(simdata),intent(inout):: datamc
-	integer:: i
+      	type(simdata),intent(in):: datasim
+      	type(simdata),intent(inout):: datamc
+      	integer:: i
 
-	datamc%secE = datamc%secE + datasim%secE
-	datamc%excite = datamc%excite + datasim%excite
-	datamc%elastic = datamc%elastic + datasim%elastic
-	datamc%gen = datamc%gen + datasim%gen
-	datamc%dissociations = datamc%dissociations + datasim%dissociations
+      	datamc%secE = datamc%secE + datasim%secE
+      	datamc%excite = datamc%excite + datasim%excite
+      	datamc%elastic = datamc%elastic + datasim%elastic
+      	datamc%gen = datamc%gen + datasim%gen
+      	datamc%dissociations = datamc%dissociations + datasim%dissociations
         datamc%inERad = datamc%inERad + datasim%inERad
       
         datamc%B1SuExc = datamc%B1SuExc + datasim%B1SuExc	
@@ -856,21 +861,21 @@ contains
         datamc%PDissEn = datamc%PDissEn + datasim%PDissEn
         datamc%PVibEn = datamc%PVibEn + datasim%PVibEn
 
-	do i=1,maxgen
-	   datamc%ePerGen(i) = datamc%ePerGen(i) + datasim%ePerGen(i) 
-	   datamc%enPerGen(i) = datamc%enPerGen(i) + datasim%enPerGen(i)
-        end do	 
-	 
-	do i=0,maxgen
-	   datamc%dissPerGen(i) = datamc%dissPerGen(i) + datasim%dissPerGen(i) 
-	   datamc%excPerGen(i) = datamc%excPerGen(i) + datasim%excPerGen(i) 
-	   datamc%elPerGen(i) = datamc%elPerGen(i) + datasim%elPerGen(i) 
-	   datamc%collPerGen(i) = datamc%collPerGen(i) + datasim%collPerGen(i) 
-	end do	 
-	 
-	if(datasim%PsFormed) then
-	   datamc%numPsFormed = datamc%numPsFormed + 1
-	end if
+      	do i=1,maxgen
+      	   datamc%ePerGen(i) = datamc%ePerGen(i) + datasim%ePerGen(i) 
+      	   datamc%enPerGen(i) = datamc%enPerGen(i) + datasim%enPerGen(i)
+              end do	 
+      	 
+      	do i=0,maxgen
+      	   datamc%dissPerGen(i) = datamc%dissPerGen(i) + datasim%dissPerGen(i) 
+      	   datamc%excPerGen(i) = datamc%excPerGen(i) + datasim%excPerGen(i) 
+      	   datamc%elPerGen(i) = datamc%elPerGen(i) + datasim%elPerGen(i) 
+      	   datamc%collPerGen(i) = datamc%collPerGen(i) + datasim%collPerGen(i) 
+      	end do	 
+      	 
+      	if(datasim%PsFormed) then
+      	   datamc%numPsFormed = datamc%numPsFormed + 1
+      	end if
 	
         !Consistency check data
         do i =1, 1000
@@ -920,33 +925,33 @@ contains
 	
     subroutine printsim(simIndex,particlebasis,datasim,bmode)	
         implicit none
-	integer,intent(in):: simIndex
-	type(particle),dimension(0:1000),intent(in):: particlebasis
-	type(simdata),intent(in):: datasim
-	logical,intent(in):: bmode ! True if Ps Benchmark Simulation is being done
-	integer:: partNum,coll
-	
-	write(60,*) '-------------------------------- NEW SIMULATION ---------------------------'
-	write(60,*) 'simIndex',simIndex
-	do partNum=0, datasim%secE   
-	   if((.not. bmode) .or. (bmode.and.(partNum.eq.0))) then
-	      write(60,*) '--------NEW PARTICLE--------'
-	      write(60,*) 'particle',partNum,'gen',particlebasis(partNum)%gen
-	      do coll=0,particlebasis(partNum)%colls
-	         write(60,*) '-------'
-		 write(60,*) 'coll',coll,'state',particlebasis(partNum)%state(coll)
-		 write(60,*) 'precollE',particlebasis(partNum)%energy(coll),'postE', particlebasis(partNum)%energy(coll+1)	
-		 if(bmode) then
-		    write(60,*) 'Ps Formation = ', particlebasis(partNum)%Ps(coll)
-		 else
-		    write(60,*) 'diss = ', particlebasis(partNum)%diss(coll)
-	         end if
-	      end do
-	   end if
-        end do
-	write(60,*) 'ions',datasim%secE
-	write(60,*) 'elastic', datasim%elastic
-	write(60,*) 'excite',datasim%excite		
+      	integer,intent(in):: simIndex
+      	type(particle),dimension(0:1000),intent(in):: particlebasis
+      	type(simdata),intent(in):: datasim
+      	logical,intent(in):: bmode ! True if Ps Benchmark Simulation is being done
+      	integer:: partNum,coll
+      	
+      	write(60,*) '-------------------------------- NEW SIMULATION ---------------------------'
+      	write(60,*) 'simIndex',simIndex
+      	do partNum=0, datasim%secE   
+      	   if((.not. bmode) .or. (bmode.and.(partNum.eq.0))) then
+      	      write(60,*) '--------NEW PARTICLE--------'
+      	      write(60,*) 'particle',partNum,'gen',particlebasis(partNum)%gen
+      	      do coll=0,particlebasis(partNum)%colls
+      	         write(60,*) '-------'
+      		 write(60,*) 'coll',coll,'state',particlebasis(partNum)%state(coll)
+      		 write(60,*) 'precollE',particlebasis(partNum)%energy(coll),'postE', particlebasis(partNum)%energy(coll+1)	
+      		 if(bmode) then
+      		    write(60,*) 'Ps Formation = ', particlebasis(partNum)%Ps(coll)
+      		 else
+      		    write(60,*) 'diss = ', particlebasis(partNum)%diss(coll)
+      	         end if
+      	      end do
+      	   end if
+              end do
+      	write(60,*) 'ions',datasim%secE
+      	write(60,*) 'elastic', datasim%elastic
+      	write(60,*) 'excite',datasim%excite		
     end subroutine printsim
 
 
@@ -964,7 +969,7 @@ contains
         type(particle),dimension(0:1000),intent(in):: particlebasis
         type(simdata),intent(in):: datasim
         logical,intent(in):: bmode ! True if Ps Benchmark Simulation is being done
-        character(len=20)::simString, enString,xString,yString,zString,stateNumString
+        character(len=20)::simString, enString,xString,yString,zString,velxString,velyString,velzString,stateNumString
         character(len=20)::partNumString, timeString
         character(len=2)::inString, dissString 
         integer::ii,jj
@@ -979,7 +984,7 @@ contains
            open(70, file="sim"//trim(simString)//".csv")
 
            write(70,*) datasim%secE+1 !Total number of electrons
-           write(70,*) "type,","Incident/Second,","EnSelected,","x(m),","y(m),","z(m),","Diss,","StateNum,","partNum,","Time(s)"               
+           write(70,*) "type,","Incident/Second,","EnSelected,","x(m),","y(m),","z(m),","velx(m/s),","vely(m/s),","velz(m/s),","Diss,","StateNum,","partNum,","Time(s)"               
            do ii = 0, datasim%secE
               if (ii .eq. 0) then
                  inString = "i"
@@ -1005,6 +1010,12 @@ contains
                  yString = trim(yString)//","
                  write(zString,'(e13.5)') particlebasis(ii)%z(jj)
                  zString = trim(zString)//","
+			        	 write(velxString,'(e13.5)') particlebasis(ii)%velx(jj)
+			        	 velxString = trim(velxString)//","
+			        	 write(velyString,'(e13.5)') particlebasis(ii)%vely(jj)
+			        	 velyString = trim(velyString)//","
+			        	 write(velzString,'(e13.5)') particlebasis(ii)%velz(jj)
+			        	 velzString = trim(velzString)//","
                  write(stateNumString, '(i4)') particlebasis(ii)%state(jj)
                  stateNumString = trim(stateNumString)//","
                  write(partNumString, '(i4)') ii
@@ -1013,36 +1024,36 @@ contains
                  timeString = trim(timeString)
 
                  write(70,'(a,a,a,a,a)',advance="no") adjustl("e,"),adjustl(inString),adjustl(enString),adjustl(xString),adjustl(yString)
-                 write(70,'(a,a,a,a,a)') adjustl(zString),adjustl(dissString),adjustl(stateNumString),adjustl(partNumString),adjustl(timeString)
+                 write(70,'(a,a,a,a,a)',advance="no") adjustl(zString),adjustl(velxString),adjustl(velyString),adjustl(velzString),adjustl(dissString)
+				         write(70,'(a,a,a)') adjustl(stateNumString),adjustl(partNumString),adjustl(timeString)
               end do
            end do
            close(70)
         end if
     end subroutine writePathToFile 
-
 	
     subroutine simulationresults(datamc,totalSims,en_incident,maxgen,ionop,bmode,runTime,data_input)	
         use input_data
-	implicit none
+      	implicit none
 
         type(input),intent(in)::data_input
-	type(simdata),intent(in):: datamc
-	integer,intent(in):: totalSims
-	real(dp),intent(in):: en_incident
-	integer,intent(in):: maxgen
-	character (len=60),intent(in):: ionop ! Ionistation option
-	logical,intent(in):: bmode ! True if Ps Benchmark Simulation is being done
-	integer:: i
+      	type(simdata),intent(in):: datamc
+      	integer,intent(in):: totalSims
+      	real(dp),intent(in):: en_incident
+      	integer,intent(in):: maxgen
+      	character (len=60),intent(in):: ionop ! Ionistation option
+      	logical,intent(in):: bmode ! True if Ps Benchmark Simulation is being done
+      	integer:: i
         real(dp)::runTime
-	real(dp):: aveIons,aveExcites,aveElastics, avediss ! Average number of each collision type
-	real(dp):: aveGens ! Average number of generations created
+      	real(dp):: aveIons,aveExcites,aveElastics, avediss ! Average number of each collision type
+      	real(dp):: aveGens ! Average number of generations created
         real(dp):: aveB1SuExc, aveC1PuExc, aveSingletExc, aveTripletExc  !Average number of different H2 excitations
         real(dp):: aveGroundv1, aveGroundv2, aveGroundRatio
-	real(dp),dimension(1000):: aveEperGen ! Average number of electrons per generation
-	real(dp),dimension(1000):: aveEnperGen ! Average number of electrons per generation
-	real(dp),dimension(0:1000):: avedissPerGen,aveexcPerGen,aveelPerGen,avecollPerGen ! Average number of dissociations per generation
-	real(dp):: fSurv ! Survival Fraction (only for Ps Benchmark Simulation)
-	real(dp):: aveTRes, eIon
+      	real(dp),dimension(1000):: aveEperGen ! Average number of electrons per generation
+      	real(dp),dimension(1000):: aveEnperGen ! Average number of electrons per generation
+      	real(dp),dimension(0:1000):: avedissPerGen,aveexcPerGen,aveelPerGen,avecollPerGen ! Average number of dissociations per generation
+      	real(dp):: fSurv ! Survival Fraction (only for Ps Benchmark Simulation)
+      	real(dp):: aveTRes, eIon
         real(dp):: wInv !1/(mean energy per ion pair)
         real(dp), dimension(0:1000):: aveNumEj
         character (len=3):: enString
@@ -1068,13 +1079,13 @@ contains
 
         open(unit=70,file='output.txt')
 	
-	aveIons = float(datamc%secE)/float(totalSims)
-	aveExcites = float(datamc%excite)/float(totalSims)
-	aveElastics = float(datamc%elastic)/float(totalSims) 
-	!aveEperGen = float(datamc%ePerGen(1))/float(totalSims)
-	aveGens = float(datamc%gen)/float(totalSims)
-	avediss = float(datamc%dissociations)/float(totalSims)
-
+      	aveIons = float(datamc%secE)/float(totalSims)
+      	aveExcites = float(datamc%excite)/float(totalSims)
+      	aveElastics = float(datamc%elastic)/float(totalSims) 
+      	!aveEperGen = float(datamc%ePerGen(1))/float(totalSims)
+      	aveGens = float(datamc%gen)/float(totalSims)
+      	avediss = float(datamc%dissociations)/float(totalSims)
+      
         aveB1SuExc = float(datamc%B1SuExc)/float(totalSims)
         aveC1PuExc = float(datamc%C1PuExc)/float(totalSims)
         aveSingletExc = float(datamc%singletExc)/float(totalSims)
@@ -1093,34 +1104,34 @@ contains
            wInv = 0.0
         end if
 
-	write(70,*) 'program runtime(s)',runTime	
-	write(70,*) 'inital particle energy (eV)', en_incident
-	write(70,*) 'total number of simulations', totalSims
-	if(bmode .eqv. .false.) then ! ionisation option only applies to default simulation
-		write(70,*) 'ionisation treatment: ', ionop
-	end if
-	! write(70,*) 'totalIons',datamc%secE,'aveIons',aveIons
-	! write(70,*) 'totalExcites',datamc%excite,'aveExcites',aveExcites
-	! write(70,*) 'totalElastics',datamc%elastic,'aveElastics',aveElastics
-	! write(70,*) 'totaldiss',datamc%dissociations,'avediss',avediss
-	
-	write(70,*) 'ave collisional ionisations',aveIons
-	write(70,*) 'ave collisional excitations',aveExcites
-	write(70,*) 'ave elastic collisions',aveElastics
-	if(.NOT. bmode) then
-		write(70,*) 'ave dissociations',avediss
-	end if
-	
-	if(bmode) then ! Ps Formation Benchmark Run
-	   fSurv = 100 * (1 - float(datamc%numPsFormed)/float(totalSims))
-	   write(70,*) 'fSurv: ', fSurv
-	   write(70,*) 'datamc%numPsFormed: ', datamc%numPsFormed
-	   aveTRes = datamc%tRes / (float(totalSims) - float(datamc%numPsFormed))
-	   write(70,*) 'TRes: ', aveTRes
-	else ! Default Simulation Run
+      	write(70,*) 'program runtime(s)',runTime	
+      	write(70,*) 'inital particle energy (eV)', en_incident
+      	write(70,*) 'total number of simulations', totalSims
+      	if(bmode .eqv. .false.) then ! ionisation option only applies to default simulation
+      		write(70,*) 'ionisation treatment: ', ionop
+      	end if
+      	! write(70,*) 'totalIons',datamc%secE,'aveIons',aveIons
+      	! write(70,*) 'totalExcites',datamc%excite,'aveExcites',aveExcites
+      	! write(70,*) 'totalElastics',datamc%elastic,'aveElastics',aveElastics
+      	! write(70,*) 'totaldiss',datamc%dissociations,'avediss',avediss
+      	
+      	write(70,*) 'ave collisional ionisations',aveIons
+      	write(70,*) 'ave collisional excitations',aveExcites
+      	write(70,*) 'ave elastic collisions',aveElastics
+      	if(.NOT. bmode) then
+      		write(70,*) 'ave dissociations',avediss
+      	end if
+      	
+      	if(bmode) then ! Ps Formation Benchmark Run
+      	   fSurv = 100 * (1 - float(datamc%numPsFormed)/float(totalSims))
+      	   write(70,*) 'fSurv: ', fSurv
+      	   write(70,*) 'datamc%numPsFormed: ', datamc%numPsFormed
+      	   aveTRes = datamc%tRes / (float(totalSims) - float(datamc%numPsFormed))
+      	   write(70,*) 'TRes: ', aveTRes
+      	else ! Default Simulation Run
            write(70,*) 'vibrationally resolved: ', data_input%vcsOp
-	   write(70,*) 'highest number of generations', maxgen
-	   write(70,*) 'ave number of generations', aveGens 
+	         write(70,*) 'highest number of generations', maxgen
+	         write(70,*) 'ave number of generations', aveGens 
            write(70,*) 'reciprocal of mean energy per ion pair:', wInv		
            write(70,*) 'average incident particle final radius:', aveRad
            write(70,*) 'average B1Su excitations per ion pair:', aveB1SuExc/aveIons
@@ -1131,28 +1142,28 @@ contains
            write(70,*) 'average X1Sg(v=2) excitations:', aveGroundv2
            write(70,*) 'average ratio of X1Sg(v=2) to (v=1) excitations', aveGroundRatio	
 
-	   do i=1,maxgen
-     	      aveEperGen(i) = float(datamc%ePerGen(i)) / float(totalSims)
-	      aveEnperGen(i) = datamc%enPerGen(i) / float(datamc%ePerGen(i))	
-	   end do
-		
+	         do i=1,maxgen
+           	      aveEperGen(i) = float(datamc%ePerGen(i)) / float(totalSims)
+	            aveEnperGen(i) = datamc%enPerGen(i) / float(datamc%ePerGen(i))	
+	         end do
+	      	
            do i=0,maxgen
-	      write(70,*) '------------------------------------------------------------'
-	      write(70,*) 'generation:',i
-	      if(i .gt. 0) then					
-	         write(70,*) 'ave number of electrons:',aveEperGen(i)!,datamc%ePerGen(i)!,&
-	         write(70,*) 'ave energy of electrons (eV):',aveEnperGen(i)
-	      end if 
-	      avedissPerGen(i) = float(datamc%dissPerGen(i)) / float(totalSims)
-	      aveexcPerGen(i) = float(datamc%excPerGen(i)) / float(totalSims)
-	      aveelPerGen(i) = float(datamc%elPerGen(i)) / float(totalSims)
-	      avecollPerGen(i) = float(datamc%collPerGen(i)) / float(totalSims)
-	      write(70,*) 'ave number of ionisation collisions:',aveEperGen(i+1)				
-	      write(70,*) 'ave number of excitation collisions:', aveexcPerGen(i)				
-	      write(70,*) 'ave number of elastic collisions:', aveelPerGen(i)				
-	      write(70,*) 'ave number of collisions:',avecollPerGen(i)
-	      write(70,*) 'ave number of dissociations:', avedissPerGen(i)
-	   end do	 
+	            write(70,*) '------------------------------------------------------------'
+	            write(70,*) 'generation:',i
+	            if(i .gt. 0) then					
+	               write(70,*) 'ave number of electrons:',aveEperGen(i)!,datamc%ePerGen(i)!,&
+	               write(70,*) 'ave energy of electrons (eV):',aveEnperGen(i)
+	            end if 
+	            avedissPerGen(i) = float(datamc%dissPerGen(i)) / float(totalSims)
+	            aveexcPerGen(i) = float(datamc%excPerGen(i)) / float(totalSims)
+	            aveelPerGen(i) = float(datamc%elPerGen(i)) / float(totalSims)
+	            avecollPerGen(i) = float(datamc%collPerGen(i)) / float(totalSims)
+	            write(70,*) 'ave number of ionisation collisions:',aveEperGen(i+1)				
+	            write(70,*) 'ave number of excitation collisions:', aveexcPerGen(i)				
+	            write(70,*) 'ave number of elastic collisions:', aveelPerGen(i)				
+	            write(70,*) 'ave number of collisions:',avecollPerGen(i)
+	            write(70,*) 'ave number of dissociations:', avedissPerGen(i)
+	         end do	 
   
            aveNumTotal = 0.0 
            aveEnTotal = 0.0
@@ -1182,12 +1193,12 @@ contains
            write(70,*) 'secondary total:'
            write(70,*) 'ave number of electrons:', aveNumTotal 
            write(70,*) 'ave energy of electrons (eV):', aveEnTotal
-	   write(70,*) 'ave number of ionisation collisions:',aveIonTotal		
+	         write(70,*) 'ave number of ionisation collisions:',aveIonTotal		
            write(70,*) 'ave number of excitation collisions:', aveExcTotal				
-	   write(70,*) 'ave number of elastic collisions:', aveElTotal		
-	   write(70,*) 'ave number of collisions:',aveCollTotal
-	   write(70,*) 'ave number of dissociations:', aveDissTotal
-       
+	         write(70,*) 'ave number of elastic collisions:', aveElTotal		
+	         write(70,*) 'ave number of collisions:',aveCollTotal
+	         write(70,*) 'ave number of dissociations:', aveDissTotal
+             
            !Average number of other dissociative effects
            aveDITot = avediss/aveIons 
            aveDISec = aveDissTotal/aveIons  !Definition: average number of secondary dissociations/average of total ionisation (including both secondary and incident)
@@ -1281,69 +1292,69 @@ contains
 	
     subroutine meanexcendist(statebasis)
         use totalcs_module
-	use state_class
-	implicit none
-	type(basis_state),intent(in):: statebasis
-	type(totalcs):: tcs 
-	real(dp):: meanexc,en_incident
-		
-	print*, 'creating secondary electron energy distribution (file=secEenergydist)'
-		
-	en_incident = 15.96632 !(eV)
-		
-	open(unit=90,file='secEenergydist')
-	!write(90,*) 'en_incident	','meanexc	','meansecE'
-	do while(en_incident .LE. 700)
-	   call get_csatein(statebasis,en_incident,tcs) ! Create totalcs for the current energy !call print_tcs(tcs) 
-	   call meanexcenergy(tcs,statebasis,meanexc)
-	   write(90,*) en_incident, meanexc-15.96632
-	   en_incident = en_incident + 0.001
-	end do
-	close(90)
+      	use state_class
+      	implicit none
+      	type(basis_state),intent(in):: statebasis
+      	type(totalcs):: tcs 
+      	real(dp):: meanexc,en_incident
+      		
+      	print*, 'creating secondary electron energy distribution (file=secEenergydist)'
+      		
+      	en_incident = 15.96632 !(eV)
+      		
+      	open(unit=90,file='secEenergydist')
+      	!write(90,*) 'en_incident	','meanexc	','meansecE'
+      	do while(en_incident .LE. 700)
+      	   call get_csatein(statebasis,en_incident,tcs) ! Create totalcs for the current energy !call print_tcs(tcs) 
+      	   call meanexcenergy(tcs,statebasis,meanexc)
+      	   write(90,*) en_incident, meanexc-15.96632
+      	   en_incident = en_incident + 0.001
+      	end do
+      	close(90)
     end subroutine meanexcendist
 	
     subroutine elasticScattering(en_incident,costheta, elEnergyLoss,bmode,dcsBasis)
         use input_data 
         use dcs_module 
-	implicit none
-	real(dp),intent(in):: en_incident	  	  ! initial energy of incident particle (eV)
-	real(dp),intent(out):: elEnergyLoss	  ! energy lost by incident particle (eV)
-	real(dp):: mParticle,mTarget 			  ! mass of particle and target (kg)
-	real(dp),intent(in):: costheta			  ! cosine of scattering angle (RADIANS)
-	real(dp):: th,randNum
-	real(dp):: PI
-	logical,intent(in):: bmode
+      	implicit none
+      	real(dp),intent(in):: en_incident	  	  ! initial energy of incident particle (eV)
+      	real(dp),intent(out):: elEnergyLoss	  ! energy lost by incident particle (eV)
+      	real(dp):: mParticle,mTarget 			  ! mass of particle and target (kg)
+      	real(dp),intent(in):: costheta			  ! cosine of scattering angle (RADIANS)
+      	real(dp):: th,randNum
+      	real(dp):: PI
+      	logical,intent(in):: bmode
         type(basis_dcs)::dcsBasis
         type(dcs)::dcsEn
 		
-	PI = 4.D0*DATAN(1.D0)
+      	PI = 4.D0*DATAN(1.D0)
 		
-	if(.NOT. bmode) then ! Run Default Simulation
-	   mParticle = 9.10938356E-31		! mass of electron (kg)
-	   !mParticle = 9.1093835D-31
-	   mTarget = 2 * 1.6726219E-27		! mass of H2 molecule (kg), assuming it is 2 * mass of proton			
-	
-           if (data_in%momOp .eq. 0) then
-              !use inelastic scattering energy loss formula	
-	      elEnergyLoss = (2*mParticle*mTarget)/((mParticle+mTarget)*(mParticle+mTarget))*en_incident*(1-costheta)
-              !print*, 'theta',theta*PI/180,'factor',(4*mParticle*mTarget)/((mParticle+mTarget)*(mParticle+mTarget))*(sin((theta*PI/180)/2))*(sin((theta*PI/180)/2))
-	      !elEnergyLoss = (3.6E-4) * en_incident
-           else if (data_in%momOp .eq. 1) then
-              !Use momentum transfer cross sections to get average energy loss
-              call get_dcsatein(dcsBasis,en_incident,dcsEn,1)    !Elastic scattering is a 1->1 transition
-              elEnergyLoss = 2*((mParticle*mTarget)/(mParticle+mTarget)**2)*en_incident*dcsEn%momtcs/dcsEn%intCs
-              call delete_dcs(dcsEn) 
-           end if
-        else
-	   ! Random Number is selected between 0 and 1
-	   call RANDOM_NUMBER(randNum)
-	   th = 180.0 * randNum
-	   mParticle = 9.10938356E-31		! mass of positron (kg)
-	   !mParticle = 9.11E-31		! mass of positron (kg)
-	   !mTarget = 1.6735575E-27		! mass of atomic H (kg)
-	   mTarget = 1.6726219E-27		! mass of H atom (kg), assuming it is mass of proton
-	   elEnergyLoss = (4*mParticle*mTarget)/((mParticle+mTarget)*(mParticle+mTarget))*en_incident*(sin(th/2))*(sin(th/2))			
-	end if
+      	if(.NOT. bmode) then ! Run Default Simulation
+      	   mParticle = 9.10938356E-31		! mass of electron (kg)
+      	   !mParticle = 9.1093835D-31
+      	   mTarget = 2 * 1.6726219E-27		! mass of H2 molecule (kg), assuming it is 2 * mass of proton			
+      	
+                 if (data_in%momOp .eq. 0) then
+                    !use inelastic scattering energy loss formula	
+      	      elEnergyLoss = (2*mParticle*mTarget)/((mParticle+mTarget)*(mParticle+mTarget))*en_incident*(1-costheta)
+                    !print*, 'theta',theta*PI/180,'factor',(4*mParticle*mTarget)/((mParticle+mTarget)*(mParticle+mTarget))*(sin((theta*PI/180)/2))*(sin((theta*PI/180)/2))
+      	      !elEnergyLoss = (3.6E-4) * en_incident
+                 else if (data_in%momOp .eq. 1) then
+                    !Use momentum transfer cross sections to get average energy loss
+                    call get_dcsatein(dcsBasis,en_incident,dcsEn,1)    !Elastic scattering is a 1->1 transition
+                    elEnergyLoss = 2*((mParticle*mTarget)/(mParticle+mTarget)**2)*en_incident*dcsEn%momtcs/dcsEn%intCs
+                    call delete_dcs(dcsEn) 
+                 end if
+              else
+      	   ! Random Number is selected between 0 and 1
+      	   call RANDOM_NUMBER(randNum)
+      	   th = 180.0 * randNum
+      	   mParticle = 9.10938356E-31		! mass of positron (kg)
+      	   !mParticle = 9.11E-31		! mass of positron (kg)
+      	   !mTarget = 1.6735575E-27		! mass of atomic H (kg)
+      	   mTarget = 1.6726219E-27		! mass of H atom (kg), assuming it is mass of proton
+      	   elEnergyLoss = (4*mParticle*mTarget)/((mParticle+mTarget)*(mParticle+mTarget))*en_incident*(sin(th/2))*(sin(th/2))			
+      	end if
     end subroutine elasticScattering
 !
 !
@@ -1356,8 +1367,8 @@ contains
     subroutine inelasticScattering(en_incident, enex, costheta, energyLoss, bmode )
         real(dp),intent(in):: en_incident	  	  ! initial energy of incident particle (eV)
         real(dp),intent(out):: energyLoss	  ! energy lost by incident particle (eV)
-	real(dp):: mParticle,mTarget 			  ! mass of particle and target (kg)
-	real(dp),intent(in):: costheta			  ! cosine of scattering angle (RADIANS)
+      	real(dp):: mParticle,mTarget 			  ! mass of particle and target (kg)
+      	real(dp),intent(in):: costheta			  ! cosine of scattering angle (RADIANS)
         logical::bmode
         real(dp):: enex  !Excitation/internal energy
         real(dp)::en, sqrtVal
@@ -1486,8 +1497,8 @@ contains
     end subroutine selectPath
 
   
-    SUBROUTINE timeElapsed(energy,crossSection,datasim)
-        use Ps_module	
+SUBROUTINE timeElapsed(energy,crossSection,datasim)
+  use Ps_module	
 	IMPLICIT NONE
 	REAL(dp), INTENT(IN) :: energy
 	REAL(dp) :: m_p, eVToJoules, constant, con2, m

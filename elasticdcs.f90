@@ -321,7 +321,7 @@ contains
          end do
 
          !Read in all columns, making use of iostat to prevent crashing.
-	 ioStatVar=0
+	       ioStatVar=0
          numLines = numLines - 2*numStates-space-1
          allocate(thetaArray(numLines), dcsArray(numLines,numStates))
          do jj = 1, numLines

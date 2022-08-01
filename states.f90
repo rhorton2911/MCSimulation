@@ -1,4 +1,3 @@
-
 module state_class
 
   use numbers

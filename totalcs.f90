@@ -901,7 +901,7 @@ contains
         integer::info
 
         a=0.0_dp
-	b=0.0_dp
+	      b=0.0_dp
         !Find the non-zero values and energies
         numPoints = 0
         do ii =1,tcs%Nmax
