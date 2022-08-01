@@ -1,0 +1,164 @@
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!File: Notes.txt
+!Purpose: contains thoughts and notes on potential
+!         issues with certain parts of the monte 
+!         carlo code, as well as standard checks.
+!Date last modified: 09/12/2020
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+sdcs.f90: compareMeanEn
+- setting meanSDCS=0 in case where all CS are zero
+  might be the wrong approach. Probably better to ensure
+  cross sections are never zero? 
+Scaling: scaling sdcs cross sections could hide interpolation
+         issues. If there seem to be SDCS problems, disable 
+         scaling. 
+
+
+!!!!!!!!!!!!!!!!!!!!!!!!Units!!!!!!!!!!!!!!!!!!!!!!!!!!
+a.u: atomic units, energy measured in Hartees, to convert Hartees 
+     to eV, multiply by 2*13.6.
+
+
+
+!!!!!!Current work!!!!!!!!!!!!!!
+There is an error in the file io for reading in the inelastic dcs
+SDCS gives TICS off by 2 orders of magnitude at two energy grid points.
+Test: calculate energy loss distribution function L(E) using CS in
+      simulations, compare to stopping power paper + older work.
+-fix interpolation issues, stopping power is not quite right. Check 
+ interpolated totalcs values to make sure they agree with input data files
+ e.g. Try totalcs at 50 eV incident energy.
+-check that some of the dcs for excitations are in fact negative
+-modify the pseudostate symmetrisation to handle the case of a low
+ number of pseudostates.
+
+
+!!!!!!!!!!!!!!!!!!!!!TODO!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+-Fix openMp crashing issue. Crashes when excitatin energies changed to fixed
+ nuclei values.  (Needed to make clean and recompile)
+-check how SDCS are sampled, perhaps simplify treatment of indistinguishability. (Correct for now, fix how integration is done)
+-force incident electron to move along z axis. Check how many electrons are backscattered
+ into negative z.
+-change excitation energies and CS to be averages over vibrational states.
+-calculate uncertainties by varying cross sections values and normalising them.
+-investigate mixture distributions.
+
+
+
+
+!!!!!!!!!!!!!!!!!Known issues to fix (systematically) before publication!!!!!!!!
+- fix issues with ionisation pseudostate symmetrisation and interpolation for a
+  low incident energies. Ensure the pseudostate and SDCS methods give the same
+  results following this modification.
+- compare(plot), systematically, across a range of incident energies, the excitation,
+  ionisation and TICS cross sections of MCCC and Green and Garvey.
+- achieve the same values for w as Green and Garvey for the same inputs.
+- incorrect values for the stopping power L(E), oscillations in interpolated SDCS 
+  for bound excitations.
+- same, slight disagreement of interpolated totalcs CS values with input files.
+- need to check that the DCS are in fact negative for certain scattering angles
+  and are being sampled correctly.
+-most important: fix the ordering of pseudostate symmetrisation.
+
+-omp crashing: works fine when using adiabatic nuclei energy values, crashes
+ when switching just to fixed nuclei excitatino energies.
+
+
+
+
+
+!!!!!!!!!!!!!!!!!!!Useful modules for debugging, etc !!!!!!!!!!!!!
+valgrind4hpc     !Contains valgrind memory checking tool
+intel       !Contains intel compiler
+gcc   !Contains gnu c and fortran compilers
+
+
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!What we know!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+-including vibrational states explicitly causes three significant changes,
+ the number of secondary electron dissociations increases by a factor of 
+ seven, the 1/(mean energy per ion pair) increases and the mean number of
+ excitations normalised by energy increases significantly also. The issue 
+ is that it is invalid to use the df summed over vibrational states
+ for each vibrational state. Each electronic and vibrational transition must have
+ its own dissociation fraction for the results to be valid/
+-IONISATIONS: 
+ -> The ejection angle of one e is determined by the other due to 
+    momentum conseravtion.
+ -> The ejection energy of one e is determined by the other due to 
+    energy conservation laws.
+ -> Experimentally, it seems like double differential CS should be used 
+    for selecting electron energy loss and scattering angle.
+ -> Perhaps even triple differential cross sections.
+-SCATTERING ANGLE: need to update to use different dcs for different
+ transitions. 
+
+
+
+
+
+
+
+!!!!!!!!!!!!!!!!!!!!!!Checks!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+-SDCS: plot integrated cross section as a function of 
+       incident energy for interpolated SDCS, integrated
+       input file values and summed totalcs. -done
+-SDCS: plot SDCS at particular incident energies and compare
+       with values in input files. -done
+-fitted SDCS: produce exponentially decaying fit to pseudostate CS
+       and differentiate to get approximate SDCS, agreement/disagreement
+       with SDCS should tell use whether or not gibbs' phenomenon is 
+       responsible for the difference.  
+-scaling SDCS: produce a function that scales/distorts the SDCS over the
+       entire energy range, but preserves total ionisation cross section.
+       Compare results with regular SDCS to check sensitivity of results
+       to SDCS values.  -implemented
+-symmetrising totalCS: causes stateNumber selection issues, need to account
+       for symmetrisation in ejection energy selection
+-plot energy loss as a function of incident energy, plot excitations per 
+ ion pair.
+
+
+
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!Known bugs!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+-scaling fitted SDCS: SDCS fit gives zero CS below 17.0 eV, as this is
+      the minimum energy for which totalcs are available. This causes
+      the scaling routine to divide by zero. Need to adjust SDCS fit
+      to handle this low energy case.
+-sdcs fit: plot of fitted SDCS produced after fitting all CS in sdcsBasis
+      is different in magnitude to that produced by calling the fitting
+      function separately, should be the same.
+
+
+
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!Current Approximations!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+-dissociation fractions: including explicit vibrational levels, but still using 
+ dissociation fractions summed over final vibrational states for a particular 
+ electronic excitation. Should still give reasonable results. In future will
+ want to generate dissociation fractions (from dissociation CS) for individual 
+ final vibrational states for a given final electronic state. (pair nf, vf), 
+ this should include excitation to dissociative vibrational states. 
+-excitations: tcstostate.f90 assumes all excitations are from state (n=0,v=0)
+
+
+
+
+NEED TO UPDATE
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+-selectVcsState: need a physically reasonable choice for cross sections sigma
+ used to calculate path length when vcs are zero. Currently uses totalcs cross section.
+-vibrational cross sections: proper use requires vibrational excitation CS for 
+ each electronic state selected. Currently only use a select few electronic states.
+
+-vibrational cross sections: (today's work): read in vibrational cross sections for 
+ all available electronic states. From given set of 'states' for electronic excitation
+ create a new vibrationally resolved set, with modified cs and ein. Modify getcsatein
+ to account for this. 
+-vibrational resolution: can be multiple states with same electronic label, but different
+ ang mom, parity, etc
+
+
+
