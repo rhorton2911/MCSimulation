@@ -103,8 +103,7 @@ subroutine mcsimulation(data_input,statebasis,sdcsBasis,eldcs,dicsBasis,VarPs,da
 	     do while((particlebasis(partNum)%energy(coll).GE. cutoffEn) .AND. (particlebasis(partNum)%energy(coll) .LE. 700)) 				                               
 	        particlebasis(partNum)%colls = coll ! Updates the amount of collisions the particle has gone through	
 		datasim%collPerGen(particlebasis(partNum)%gen) = datasim%collPerGen(particlebasis(partNum)%gen) + 1	! Updates collisions per generation			
-		call
-		collisionsimulation(data_input,statebasis,sdcsBasis,dicsBasis,particlebasis,partNum,coll,simIndex,datasim,ionop,bmode,VarPs,eldcs,Elec)
+		call collisionsimulation(data_input,statebasis,sdcsBasis,dicsBasis,particlebasis,partNum,coll,simIndex,datasim,ionop,bmode,VarPs,eldcs,Elec)
 		coll = coll + 1 ! Increment to consider the next collision		
 	     end do
 	  end if
@@ -149,8 +148,7 @@ end subroutine mcsimulation
 
 
 
-subroutine
-	 collisionsimulation(data_input,statebasis,sdcsBasis,dicsBasis,particlebasis,partNum,coll,simIndex,datasim,ionop,bmode,VarPs,eldcs,Elec)
+subroutine collisionsimulation(data_input,statebasis,sdcsBasis,dicsBasis,particlebasis,partNum,coll,simIndex,datasim,ionop,bmode,VarPs,eldcs,Elec)
     use numbers
     use state_class        ! defines states (and basis of them) with operations on them
     use sdcs_module
@@ -180,7 +178,7 @@ subroutine
     integer:: stateNum
     type(dcs):: dcsaten
     real(dp):: cosangle, randNum, phi, path	
-    real(dp):: mass, deltaT
+    real(dp):: mass
 
     ! For Ps Benchmark Simulation
     type(PsVar),intent(in):: VarPs 
@@ -214,11 +212,11 @@ subroutine
        phi = randNum*4d0*atan(1.d0)   
 
        !Generate path length at given energy
-       call selectPath(path,stateBasis,particleBasis(partNum)%energy(coll),coll)
+       call selectPath(path,stateBasis,particleBasis(partNum)%energy(coll))
        !call update_position(particlebasis(partNum,rad,costheta,phi,coll)   !Update particle position
 
        call E_Field(particlebasis(partNum),path,cosangle,phi,coll,datasim,Elec,particleBasis(partNum)%energy(coll),statebasis)
-	     call update_energy(statebasis,sdcsBasis,eldcs,stateNum,tcs,particlebasis,minExcEn,partNum,cosangle,coll,ionop,data_input%enlossop,datasim,bmode,VarPs) ! Update the energy of the particle	
+       call update_energy(statebasis,sdcsBasis,eldcs,stateNum,tcs,particlebasis,partNum,cosangle,coll,ionop,data_input%enlossop,datasim,bmode,VarPs) ! Update the energy of the particle	
 
 	     !Where should E_Field go exactly?
 	   

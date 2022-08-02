@@ -87,7 +87,7 @@ subroutine E_Field(particleIn,rad,costheta,phi,coll,datasim,Elec,energy,statebas
 	
 		
 		!Then, calculate path again using new approximated energy
-		call selectPath(path,statebasis,energy,coll)
+		call selectPath(path,statebasis,energy)
 		
 		
 		!Calculate new time taken, which will be the time returned to the simulation
