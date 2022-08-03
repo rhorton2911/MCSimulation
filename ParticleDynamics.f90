@@ -67,9 +67,9 @@ subroutine E_Field(particleIn,rad,costheta,phi,coll,datasim,Elec,energy,statebas
 		particleIn%abs_vel(coll) = magVel
 
         !Begin by taking 'rad' calculated in selectPath, and figuring out time taken
-		print*, 'Before timeTaken call', coll
+		!print*, 'Before timeTaken call', coll
 		call timeTaken(rad, Velocity, Acceleration, time)
-		print*, 'After timeTaken call', coll
+		!print*, 'After timeTaken call', coll
 		
 		
 		
@@ -92,7 +92,7 @@ subroutine E_Field(particleIn,rad,costheta,phi,coll,datasim,Elec,energy,statebas
 		
 		!Calculate new time taken, which will be the time returned to the simulation
 		call timeTaken(path, Velocity, Acceleration, time)
-		print *, 'Time taken for collision ', coll, 'is: ', time
+		!print *, 'Time taken for collision ', coll, 'is: ', time
 		
 		!Update position, position from origin, energy, for new collision
 		velx = Velocity(1) + Acceleration(1)*time
@@ -187,7 +187,7 @@ subroutine timeTaken(path, Velocity, Acceleration, time)
 	posx = 0.0
 	posy = 0.0
 	posz = 0.0
-	print*, 'Before do loop, path is: ', path
+	!print*, 'Before do loop, path is: ', path
 	do while(integral .lt. path)
 		
 		deltax = abs(VelocityInt(1) * increment + Acceleration(1) * increment * increment)
@@ -205,7 +205,7 @@ subroutine timeTaken(path, Velocity, Acceleration, time)
 		time = time + increment
 		!print *, "Current integral in loop is: ", integral
 	end do
-	print*, 'After do loop'
+	!print*, 'After do loop'
 	
 	!Export time taken
 	time = time - increment
