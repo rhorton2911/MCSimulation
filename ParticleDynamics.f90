@@ -203,7 +203,7 @@ subroutine timeTaken(path, Velocity, Acceleration, time)
 		
 		
 		time = time + increment
-		print *, "Current integral in loop is: ", integral
+		!print *, "Current integral in loop is: ", integral
 	end do
 	print*, 'After do loop'
 	
