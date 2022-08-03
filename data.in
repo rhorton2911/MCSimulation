@@ -1,7 +1,7 @@
 default ! 'PsBenchmarkTest' or 'default'
 H2
 500.0   ! Incident particle energy (eV)
-100000   ! Number of simulations
+500000   ! Number of simulations
 0   !Debug Option (0=Production Mode, 1= Run tests)
 1   !Number of variations of input parameters to run (1 for full MC with no uncertainty propagation)
 3 !Number of simulations to write to file for visualization.
