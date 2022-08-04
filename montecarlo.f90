@@ -798,7 +798,11 @@ contains
         else if ((statebasis%b(stateNum)%resolved) .and. (statebasis%b(stateNum)%enex - statebasis%b(stateNum)%dissThresh .lt. 0.0d0))  then
            !Record energy of bound excitation caused by primary
            if (partNum .eq. 0) then
-              datasim%PVibEn = datasim%PVibEn + statebasis%b(stateNum)%enex 
+	      if ((data_in%groundVibOp .eq. 1) .and. (statebasis%b(stateNum)%stlabel .eq. 'X1Sg')) then
+                 datasim%PVibEn = datasim%PVibEn + statebasis%b(stateNum)%enex 
+              else if (data_in%groundVibOp .eq. 0) then
+                 datasim%PVibEn = datasim%PVibEn + statebasis%b(stateNum)%enex 
+	      end if
            end if
         end if
         !end if

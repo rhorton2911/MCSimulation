@@ -23,6 +23,7 @@ module input_data
          integer:: momOp           !momOp (0=formula,1=momentum transfer cs)
          integer::distortSdcsOp   !option to distort sdcs to investigate sensitivity to SDCS values
          integer:: vcsop          !Option of whether or not to use vibrational cross sections
+	 integer:: groundVibOp    !Option of whether or not to restrict recording of vibrational excitations by primary to ground state only (1=yes, 0=no)
          integer:: dissOn         !Option for whether or not to allow dissociative excitation (1=yes, 0=no)
          !integer:: numVib
          integer:: radop          !Path length distribution option(1=exponential,0=constant mean)
@@ -155,6 +156,9 @@ contains
 
         read(nfile,*) self%vcsop
 	if(iwrite .eq. 1) write(*,*) 'vcsop: ', self%vcsop
+
+        read(nfile,*) self%groundVibOp
+	if(iwrite .eq. 1) write(*,*) 'groundVibOp: ', self%groundVibOp
 
         read(nfile,*) self%dissOn
 	if(iwrite .eq. 1) write(*,*) 'dissOn: ', self%dissOn

@@ -16,6 +16,7 @@ state_distribution ! Ionisation Treatment ('mean', 'state_distribution', 'SDCS',
 0 !state_distribution ionisation option (0 = regular, 1=symmetrised)   !!!!This produced the TICS doubling bug!!!!
 0 !Sdcs distortion option (1=distort Sdcs for testing,0=leave alone)
 1 !vcs option (0=don't use, 1= use)
+1 !record only ground vib excitation by primary electron (0=don't use, 1=use)
 1 !dissociation option (1=allow direct dissociative excitation, 0=switch off)
 1 !radop, path length option (1=exponential distribution,0=constant mean free path)
 0 !elastic scattering CS scaling option (1=scale, 0=do nothing)            !!Used for error propagation
