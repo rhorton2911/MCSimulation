@@ -261,7 +261,7 @@ subroutine populateStatesVcs(statebasis,tcsbasis)
     character(len=10)::str11, str12  !Used for file IO
     character(len=10)::enString
     character(len=11)::threshEn
-    real(dp)::deltaE, eMin, eMax, csVal, maxEnInVcs, minEnInVcs, einVal
+    real(dp)::deltaE, eMin, eMax, csVal, maxEnInVcs, minEnInVcs, einVal, dissDiff, dissThreshGround
     real(dp)::groundEn, en1, en2
     character(len=80)::filename
     logical:: ex
@@ -347,6 +347,18 @@ subroutine populateStatesVcs(statebasis,tcsbasis)
     close(23)
     groundEn = stateEn(1)  !Ground state energy in eV
 
+
+    !Read in dissociation threshold for ground electronic state from file
+    filename=data_in%filename_vcsEn(2)
+    dissDiff=0.0_dp
+    dissThreshGround=0.0_dp
+    open(28,file=filename)
+    read(28,*)
+    read(28,*)
+    read(28,*) vfVal, en1, en2, dissDiff 
+    close(28)
+    dissThreshGround = abs(dissDiff) 
+
     !Read in vcs for elastic (electronic) scattering (X1Sg -> X1Sg) (vi -> vf)
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     print*, 'read vibrational excitation cross sections (elastic)'
@@ -420,6 +432,7 @@ subroutine populateStatesVcs(statebasis,tcsbasis)
        call copy_state(tempbasis(ii),statebasis%b(n))        
        tempbasis(ii)%v = vfVal     !vf in file 
        tempbasis(ii)%en = stateEn(vfVal+1) !State energy (possibly negative) in eV
+       tempbasis(ii)%dissThresh= dissThreshGround !Dissociation threshold (positive), measure from assumed initial state
 
        !Interpolate cross sections to new energy grid 
        allocate(intpCs(size(newGrid)))

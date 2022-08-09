@@ -183,8 +183,9 @@ ALLDCS/CCC_AN_DCS_H2_el_b3Su_11.5eV
 ALLDCS/CCC_AN_DCS_H2_el_b3Su_12eV
 ALLDCS/CCC_AN_DCS_H2_el_b3Su_12.5eV
 ALLDCS/CCC_AN_DCS_H2_el_b3Su_13eV
-1   !Number of vcs energy files
+2   !Number of vcs energy files
 vibenergies-H2-X1Sg.txt
+vibenergies-X1Sg_J=0
 4 1   !!Number and type of vibrational CS files
 ANFICS-X1Sg_vf=0.X1Sg_vi=0 
 ANFICS-X1Sg_vf=1.X1Sg_vi=0 

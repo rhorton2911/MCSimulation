@@ -56,6 +56,7 @@ module input_data
                                             filename_dcs => NULL(), filename_dcsinel => NULL(), filename_dcsinelcor => NULL(), filename_sdcsNew => NULL(), &
                                             filename_vcsEn => NULL(), filename_vcs => NULL(), filename_vcsNew => NULL(), filename_dfVib => NULL(),  &
                                             filename_VcsPseudo => NULL()
+     character(len=80):: filename_X1SgStates
      real(dp):: eV = 27.21138505_dp    !SI to Hartees conversion factor
      real(dp):: bohrRadius = 5.29e-11_dp  !m^2
      real(dp):: eVToSi = 1.60e-19_dp
@@ -238,7 +239,6 @@ contains
     read(nfile,*) self%NvcsEn
     if(iwrite .eq. 1) write(*,*) "NvcsEN: ", self%NvcsEN
     call read_files_block(self,nfile,iwrite,self%NvcsEn,self%filename_vcsEn)
-
 
     read(nfile,*) self%Nvcs
     if(iwrite .eq. 1) write(*,*) 'Nvcs: ', self%Nvcs

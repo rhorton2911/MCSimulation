@@ -785,7 +785,19 @@ contains
               datasim%b3SuDiss = datasim%b3SuDiss + 1
            end if  
 	end if
-  
+ 
+!        if (TRIM(statebasis%b(stateNum)%stlabel) .eq. 'X1Sg') then
+!	   print*, "Ground, partNum: ", partNum
+!	   print*, "Resolved: ", statebasis%b(stateNum)%resolved
+!	   print*, statebasis%b(stateNum)%enex - statebasis%b(stateNum)%dissThresh
+!!	   print*, data_in%groundVibOp
+!!
+!	   print*, "STATE DETAILS___________"
+!	   print*, "ENEX, DISSTHRESH: ", statebasis%b(stateNum)%enex, statebasis%b(stateNum)%dissThresh
+!	   print*, stateNum
+!	end if
+
+
         !If enex - dissThresh > 0, this is a dissociative pseudostate, record energy release
         !print*, "ENEX, THRESH: ", statebasis%b(stateNum)%enex, statebasis%b(stateNum)%dissThresh
         if ((statebasis%b(stateNum)%resolved) .and. (statebasis%b(stateNum)%enex - statebasis%b(stateNum)%dissThresh .gt. 0.0d0)) then
