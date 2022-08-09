@@ -392,7 +392,6 @@ subroutine populateStatesVcs(statebasis,tcsbasis)
        enddo
        close(nfile)
 
-
        !Find state with label given in filename
        do n=1,Nmaxall
           j = LEN(TRIM(data_in%DATApath)) + 1
@@ -434,10 +433,14 @@ subroutine populateStatesVcs(statebasis,tcsbasis)
        do kk=1, size(newGrid)
           if (newGrid(kk) .gt. maxEnInVcs) then
              intpCs(kk) = 0d0
-          else if (newGrid(jj) .lt. minEnInVcs) then
+          else if (newGrid(kk) .lt. minEnInVcs) then
              intpCs(kk) = 0d0
           end if
        end do
+      ! print*, "Interpolated: ", vfVal, stateEn(vfVal+1) 
+      ! do kk = 1, size(newGrid)
+      !    print*, newGrid(kk), intpCs(kk)
+      ! end do
 
        !Copy cross sections to state type
        deallocate(tempbasis(ii)%ein,tempbasis(ii)%cs)
@@ -451,6 +454,7 @@ subroutine populateStatesVcs(statebasis,tcsbasis)
        call set_df(tempbasis(ii), size(newGrid), newGrid, dfArray) 
        !Include new excitation energies for given v state
        tempbasis(ii)%enex = stateEn(tempbasis(ii)%v+1) - groundEn
+       !print*, "ENEX: ", tempbasis(ii)%enex
        deallocate(intpCs,csArray,eInArray,dfArray)
     end do
     numElastic = ii-1

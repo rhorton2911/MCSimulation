@@ -784,7 +784,7 @@ contains
            else if (statebasis%b(stateNum)%stlabel .eq. 'b3Su') then
               datasim%b3SuDiss = datasim%b3SuDiss + 1
            end if  
-	      end if
+	end if
   
         !If enex - dissThresh > 0, this is a dissociative pseudostate, record energy release
         !print*, "ENEX, THRESH: ", statebasis%b(stateNum)%enex, statebasis%b(stateNum)%dissThresh
@@ -798,7 +798,8 @@ contains
         else if ((statebasis%b(stateNum)%resolved) .and. (statebasis%b(stateNum)%enex - statebasis%b(stateNum)%dissThresh .lt. 0.0d0))  then
            !Record energy of bound excitation caused by primary
            if (partNum .eq. 0) then
-	      if ((data_in%groundVibOp .eq. 1) .and. (statebasis%b(stateNum)%stlabel .eq. 'X1Sg')) then
+	      !print*, TRIM(statebasis%b(stateNum)%stlabel), statebasis%b(stateNum)%v
+	      if ((data_in%groundVibOp .eq. 1) .and. (TRIM(statebasis%b(stateNum)%stlabel) .eq. 'X1Sg')) then
                  datasim%PVibEn = datasim%PVibEn + statebasis%b(stateNum)%enex 
               else if (data_in%groundVibOp .eq. 0) then
                  datasim%PVibEn = datasim%PVibEn + statebasis%b(stateNum)%enex 
