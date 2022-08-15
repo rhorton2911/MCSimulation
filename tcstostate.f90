@@ -164,8 +164,7 @@ subroutine populatestates(statebasis,tcsbasis)
         print*,'tcstostate.f90: populatestate() 2: could not find a state with this label:',  data_in%filename_addics(i)(5:9)
         stop
      endif
-     if( n .eq. 1) then ! elastic channel
-        vdf(1) = vdf(3)
+     if( n .eq. 1) then ! elastic channel vdf(1) = vdf(3)
         vdf(2) = vdf(3)
      endif
 
@@ -353,6 +352,7 @@ subroutine populateStatesVcs(statebasis,tcsbasis)
     dissDiff=0.0_dp
     dissThreshGround=0.0_dp
     open(28,file=filename)
+		print*, filename
     read(28,*)
     read(28,*)
     read(28,*) vfVal, en1, en2, dissDiff 
@@ -767,6 +767,7 @@ subroutine populateStatesVcs(statebasis,tcsbasis)
     !end do
     !stop
 
+
     !Sort newly filled basis by excitation energy
     !call sort_by_energy(statebasis)    
     call sortEnergies(statebasis)
@@ -982,6 +983,22 @@ subroutine readVcsPseudo(statebasis)
 
     !Sort all states by energy
     call sortEnergies(statebasis)
+
+		!Used for testing purposes to switch off excitations of specific states
+!		do ii = 1, statebasis%n
+!			 !Switch off dissociative excitations
+!			 if (statebasis%b(ii)%stlabel .eq. 'C1Pu') then
+!					if( statebasis%b(ii)%enex - statebasis%b(ii)%dissThresh .gt. 0.0_dp) then
+!					   statebasis%b(ii)%cs(:) = 0.0_dp
+!				  end if
+!			 end if
+!			 if (statebasis%b(ii)%stlabel .eq. 'B1Su') then
+!					if( statebasis%b(ii)%enex - statebasis%b(ii)%dissThresh .gt. 0.0_dp) then
+!					   statebasis%b(ii)%cs(:) = 0.0_dp
+!				  end if
+!			 end if
+!	  end do
+!
 end subroutine readVcsPseudo
 
 

@@ -218,9 +218,9 @@ subroutine collisionsimulation(data_input,statebasis,sdcsBasis,dicsBasis,particl
        call E_Field(particlebasis(partNum),path,cosangle,phi,coll,datasim,Elec,particleBasis(partNum)%energy(coll),statebasis)
        call update_energy(statebasis,sdcsBasis,eldcs,stateNum,tcs,particlebasis,partNum,cosangle,coll,ionop,data_input%enlossop,datasim,bmode,VarPs) ! Update the energy of the particle	
 
+
+       !call testInputData(statebasis, eldcs, sdcsBasis, statebasis%b(1)%ein, size(statebasis%b(1)%ein))
 	     !Where should E_Field go exactly?
-	   
-	   
 	   
 	     !The below line is commented out as it is the time taken in the case of no E field 
 	     !deltaT = path*SQRT(mass/(2*particleBasis(partNum)%energy(coll)*data_in%evToSi)) 

@@ -873,6 +873,8 @@ contains
         datamc%tripDiss = datamc%tripDiss + datasim%tripDiss
         datamc%C1PuDiss = datamc%C1PuDiss + datasim%C1PuDiss
         datamc%B1SuDiss = datamc%B1SuDiss + datasim%B1SuDiss
+
+
         datamc%b3SuDiss = datamc%b3SuDiss + datasim%b3SuDiss
         datamc%dissHeat = datamc%dissHeat + datasim%dissHeat
         datamc%PDissEn = datamc%PDissEn + datasim%PDissEn
