@@ -985,20 +985,20 @@ subroutine readVcsPseudo(statebasis)
     call sortEnergies(statebasis)
 
 		!Used for testing purposes to switch off excitations of specific states
-!		do ii = 1, statebasis%n
-!			 !Switch off dissociative excitations
-!			 if (statebasis%b(ii)%stlabel .eq. 'C1Pu') then
-!					if( statebasis%b(ii)%enex - statebasis%b(ii)%dissThresh .gt. 0.0_dp) then
-!					   statebasis%b(ii)%cs(:) = 0.0_dp
-!				  end if
-!			 end if
-!			 if (statebasis%b(ii)%stlabel .eq. 'B1Su') then
-!					if( statebasis%b(ii)%enex - statebasis%b(ii)%dissThresh .gt. 0.0_dp) then
-!					   statebasis%b(ii)%cs(:) = 0.0_dp
-!				  end if
-!			 end if
-!	  end do
-!
+	!	do ii = 1, statebasis%n
+	!		 !Switch off dissociative excitations
+	!		 if (statebasis%b(ii)%stlabel .eq. 'C1Pu') then
+	!				if( statebasis%b(ii)%enex - statebasis%b(ii)%dissThresh .lt. 0.0_dp) then
+	!				   statebasis%b(ii)%cs(:) = 0.0_dp
+	!			  end if
+	!		 end if
+	!		 if (statebasis%b(ii)%stlabel .eq. 'B1Su') then
+	!				if( statebasis%b(ii)%enex - statebasis%b(ii)%dissThresh .lt. 0.0_dp) then
+	!				   statebasis%b(ii)%cs(:) = 0.0_dp
+	!			  end if
+	!		 end if
+	!  end do
+
 end subroutine readVcsPseudo
 
 

@@ -629,7 +629,7 @@ subroutine testInputData(statebasis, eldcs, sdcsBasis, enfine, Nenfine)
               .or. (statebasis%b(ii)%stlabel .eq. 'B1Su') .or. (statebasis%b(ii)%stlabel .eq. 'C1Pu') & 
               .or. (statebasis%b(ii)%stlabel .eq. 'b3Su') .or. (statebasis%b(ii)%stlabel .eq. 'c3Pu') &
               .or. (statebasis%b(ii)%stlabel .eq. 'EF1Sg')) then
-              if ((statebasis%b(ii)%v .ge. 0) .and. (statebasis%b(ii)%v .le. 4)) then 
+              if ((statebasis%b(ii)%v .ge. 0) .and. (statebasis%b(ii)%v .le. 12)) then 
                  write(enString,'(I0)') statebasis%b(ii)%v
                  filename = 'cs'//trim(statebasis%b(ii)%stlabel)//'vf'//trim(enString)//'Intp'
                  writeData = .true.
