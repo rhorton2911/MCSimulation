@@ -68,6 +68,7 @@ module mc
         real(dp):: tripIonPair  !Triplet excitations per ion pair
         real(dp):: B1SuIonPair  !B1Su excitations per ion pair
         real(dp):: C1PuIonPair  !C1Pu excitations per ion pair
+				integer:: maxCols
 
         integer:: groundv1 !Number of X1Sg(v=1) excitations
         integer:: groundv2 !Number of X1Sg(v=2) excitations
@@ -210,6 +211,7 @@ contains
         end do
         self%numEj(:) = 0
         self%W = 0.0d0 
+				self%maxCols = 0
         self%singIonPair = 0.0d0
         self%tripIonPair = 0.0d0
         self%B1SuIonPair = 0.0d0
@@ -784,8 +786,20 @@ contains
            else if (statebasis%b(stateNum)%stlabel .eq. 'b3Su') then
               datasim%b3SuDiss = datasim%b3SuDiss + 1
            end if  
-	      end if
-  
+	end if
+ 
+!        if (TRIM(statebasis%b(stateNum)%stlabel) .eq. 'X1Sg') then
+!	   print*, "Ground, partNum: ", partNum
+!	   print*, "Resolved: ", statebasis%b(stateNum)%resolved
+!	   print*, statebasis%b(stateNum)%enex - statebasis%b(stateNum)%dissThresh
+!!	   print*, data_in%groundVibOp
+!!
+!	   print*, "STATE DETAILS___________"
+!	   print*, "ENEX, DISSTHRESH: ", statebasis%b(stateNum)%enex, statebasis%b(stateNum)%dissThresh
+!	   print*, stateNum
+!	end if
+
+
         !If enex - dissThresh > 0, this is a dissociative pseudostate, record energy release
         !print*, "ENEX, THRESH: ", statebasis%b(stateNum)%enex, statebasis%b(stateNum)%dissThresh
         if ((statebasis%b(stateNum)%resolved) .and. (statebasis%b(stateNum)%enex - statebasis%b(stateNum)%dissThresh .gt. 0.0d0)) then
@@ -798,7 +812,12 @@ contains
         else if ((statebasis%b(stateNum)%resolved) .and. (statebasis%b(stateNum)%enex - statebasis%b(stateNum)%dissThresh .lt. 0.0d0))  then
            !Record energy of bound excitation caused by primary
            if (partNum .eq. 0) then
-              datasim%PVibEn = datasim%PVibEn + statebasis%b(stateNum)%enex 
+	      !print*, TRIM(statebasis%b(stateNum)%stlabel), statebasis%b(stateNum)%v
+	      if ((data_in%groundVibOp .eq. 1) .and. (TRIM(statebasis%b(stateNum)%stlabel) .eq. 'X1Sg')) then
+                 datasim%PVibEn = datasim%PVibEn + statebasis%b(stateNum)%enex 
+              else if (data_in%groundVibOp .eq. 0) then
+                 datasim%PVibEn = datasim%PVibEn + statebasis%b(stateNum)%enex 
+	      end if
            end if
         end if
         !end if
@@ -845,7 +864,12 @@ contains
            datamc%C1PuIonPair = datamc%C1PuIonPair + dble(datasim%C1PuExc)/dble(datasim%secE)
         end if    
         !Else, do nothing, no ionisation occured, add zero.
-        
+
+			  !Update maximum number of collisions
+        if (datasim%maxCols .gt. datamc%maxCols) then
+					 datamc%maxCols = datasim%maxCols
+			  end if
+ 
         datamc%groundv1 = datamc%groundv1 + datasim%groundv1
         datamc%groundv2 = datamc%groundv2 + datasim%groundv2     
         if (datasim%groundv1 .gt. 0) then 
@@ -856,6 +880,8 @@ contains
         datamc%tripDiss = datamc%tripDiss + datasim%tripDiss
         datamc%C1PuDiss = datamc%C1PuDiss + datasim%C1PuDiss
         datamc%B1SuDiss = datamc%B1SuDiss + datasim%B1SuDiss
+
+
         datamc%b3SuDiss = datamc%b3SuDiss + datasim%b3SuDiss
         datamc%dissHeat = datamc%dissHeat + datasim%dissHeat
         datamc%PDissEn = datamc%PDissEn + datasim%PDissEn
@@ -1115,6 +1141,7 @@ contains
       	! write(70,*) 'totalElastics',datamc%elastic,'aveElastics',aveElastics
       	! write(70,*) 'totaldiss',datamc%dissociations,'avediss',avediss
       	
+				write(70,*) 'max number collisions (all sims): ', datamc%maxCols
       	write(70,*) 'ave collisional ionisations',aveIons
       	write(70,*) 'ave collisional excitations',aveExcites
       	write(70,*) 'ave elastic collisions',aveElastics

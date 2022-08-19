@@ -1,7 +1,7 @@
 default ! 'PsBenchmarkTest' or 'default'
 H2
 500.0   ! Incident particle energy (eV)
-500000   ! Number of simulations
+100000   ! Number of simulations
 0   !Debug Option (0=Production Mode, 1= Run tests)
 1   !Number of variations of input parameters to run (1 for full MC with no uncertainty propagation)
 3 !Number of simulations to write to file for visualization.
@@ -16,6 +16,7 @@ state_distribution ! Ionisation Treatment ('mean', 'state_distribution', 'SDCS',
 0 !state_distribution ionisation option (0 = regular, 1=symmetrised)   !!!!This produced the TICS doubling bug!!!!
 0 !Sdcs distortion option (1=distort Sdcs for testing,0=leave alone)
 1 !vcs option (0=don't use, 1= use)
+1 !record only ground vib excitation by primary electron (0=don't use, 1=use)
 1 !dissociation option (1=allow direct dissociative excitation, 0=switch off)
 1 !radop, path length option (1=exponential distribution,0=constant mean free path)
 0 !elastic scattering CS scaling option (1=scale, 0=do nothing)            !!Used for error propagation
@@ -182,8 +183,9 @@ ALLDCS/CCC_AN_DCS_H2_el_b3Su_11.5eV
 ALLDCS/CCC_AN_DCS_H2_el_b3Su_12eV
 ALLDCS/CCC_AN_DCS_H2_el_b3Su_12.5eV
 ALLDCS/CCC_AN_DCS_H2_el_b3Su_13eV
-1   !Number of vcs energy files
+2   !Number of vcs energy files
 vibenergies-H2-X1Sg.txt
+vibenergies-X1Sg_J=0
 4 1   !!Number and type of vibrational CS files
 ANFICS-X1Sg_vf=0.X1Sg_vi=0 
 ANFICS-X1Sg_vf=1.X1Sg_vi=0 

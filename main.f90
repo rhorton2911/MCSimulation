@@ -10,6 +10,7 @@ program main
   use mc
 
 
+
   implicit none
  
   logical:: ex
@@ -184,6 +185,7 @@ program main
      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 
+		 print*, "MAKE FINE ENERGY GRID"
 
      call fineenergygrid(statebasis,tcsbasis,enfinetmp,Nenfine)
      print*,  'Nenfine =', Nenfine 
@@ -244,6 +246,7 @@ program main
         numInel = numInel + 1
      end if
   end do
+
 
   pEl = 0.0_dp
   pIon = 0.0_dp
@@ -456,7 +459,8 @@ subroutine testInputData(statebasis, eldcs, sdcsBasis, enfine, Nenfine)
     type(dcs):: dcsaten       
     type(sdcs):: sdcsaten      
     logical:: writeData       
-    real(dp), dimension(:), allocatable:: boundX1SgCs, boundB1SuCs, boundC1PuCs, bounda3SgCs, boundc3PuCs, boundEF1SgCs 
+    real(dp), dimension(:), allocatable:: boundX1SgCs, boundB1SuCs, boundC1PuCs, bounda3SgCs, boundc3PuCs, boundEF1SgCs, totalC1PuDiss
+     real(dp), dimension(:), allocatable:: totalB1SuDiss,totalb3SuDiss,totala3SgDiss,totalc3PuDiss,totalEF1SgDiss
     real(dp), dimension(:,:), allocatable:: forWriting 
 
      nst = 3
@@ -624,7 +628,7 @@ subroutine testInputData(statebasis, eldcs, sdcsBasis, enfine, Nenfine)
               .or. (statebasis%b(ii)%stlabel .eq. 'B1Su') .or. (statebasis%b(ii)%stlabel .eq. 'C1Pu') & 
               .or. (statebasis%b(ii)%stlabel .eq. 'b3Su') .or. (statebasis%b(ii)%stlabel .eq. 'c3Pu') &
               .or. (statebasis%b(ii)%stlabel .eq. 'EF1Sg')) then
-              if ((statebasis%b(ii)%v .ge. 0) .and. (statebasis%b(ii)%v .le. 4)) then 
+              if ((statebasis%b(ii)%v .ge. 0) .and. (statebasis%b(ii)%v .le. 12)) then 
                  write(enString,'(I0)') statebasis%b(ii)%v
                  filename = 'cs'//trim(statebasis%b(ii)%stlabel)//'vf'//trim(enString)//'Intp'
                  writeData = .true.
@@ -677,6 +681,77 @@ subroutine testInputData(statebasis, eldcs, sdcsBasis, enfine, Nenfine)
            end do
         close(70)
 
+
+	!Test total dissociative excitation cross sections for specific states of interest, calculate 
+	!by summing vibrational pseudostates and writing to file for plotting
+	allocate(totalC1PuDiss(size(statebasis%b(1)%ein)))
+	allocate(totalB1SuDiss(size(statebasis%b(1)%ein)))
+	allocate(totalb3SuDiss(size(statebasis%b(1)%ein)))
+	allocate(totala3SgDiss(size(statebasis%b(1)%ein)))
+	allocate(totalc3PuDiss(size(statebasis%b(1)%ein)))
+	allocate(totalEF1SgDiss(size(statebasis%b(1)%ein)))
+	totalC1PuDiss(:)=0.0_dp
+	totalB1SuDiss(:)=0.0_dp
+	totalb3SuDiss(:)=0.0_dp
+	totala3SgDiss(:)=0.0_dp
+	totalc3PuDiss(:)=0.0_dp
+	totalEF1SgDiss(:)=0.0_dp
+
+	if (data_in%vcsOp .eq. 1) then
+	   do ii =1, statebasis%n
+	      if ((statebasis%b(ii)%enex - statebasis%b(ii)%dissThresh) .gt. 0.0_dp) then 
+	         if (statebasis%b(ii)%stlabel .eq. 'C1Pu') then
+	            totalC1PuDiss(:) = totalC1PuDiss(:) + statebasis%b(ii)%cs(:) 
+		 end if
+	         if (statebasis%b(ii)%stlabel .eq. 'B1Su') then
+	            totalB1SuDiss(:) = totalB1SuDiss(:) + statebasis%b(ii)%cs(:) 
+		 end if
+	         if (statebasis%b(ii)%stlabel .eq. 'b3Su') then
+	            totalb3SuDiss(:) = totalb3SuDiss(:) + statebasis%b(ii)%cs(:) 
+		 end if
+	         if (statebasis%b(ii)%stlabel .eq. 'a3Sg') then
+	            totala3SgDiss(:) = totala3SgDiss(:) + statebasis%b(ii)%cs(:) 
+		 end if
+	         if (statebasis%b(ii)%stlabel .eq. 'c3Pu') then
+	            totalc3PuDiss(:) = totalc3PuDiss(:) + statebasis%b(ii)%cs(:) 
+		 end if
+	         if (statebasis%b(ii)%stlabel .eq. 'EF1Sg') then
+	            totalEF1SgDiss(:) = totalEF1SgDiss(:) + statebasis%b(ii)%cs(:) 
+		 end if
+	      end if 
+	   end do
+	end if
+
+	open(70, file='DissTotal.txt')
+	write(70,*) "Total dissociation cross section obtained by suming pseudostates as a function of projectile energy"
+	write(70,*) "EIN,C1Pu,B1Su,b3Su,a3Sg,EF1Sg"
+	do ii = 1, SIZE(statebasis%b(1)%ein)
+	   write(70,*) statebasis%b(1)%ein(ii), totalC1PuDiss(ii), totalB1SuDiss(ii), totalb3SuDiss(ii), totala3SgDiss(ii), totalc3PuDiss(ii), totalEF1SgDiss(ii)
+	end do
+	close(70)
+
+	!Write dissociation fractions of specific states to file for comparison with input
+	open(71,file='C1PuDissFrac.txt')
+	open(72,file='B1SuDissFrac.txt')
+	if (data_in%vcsop .eq. 1) then
+     do ii = 1, statebasis%n
+        if (statebasis%b(ii)%stlabel .eq. 'C1Pu' ) then
+					 if (statebasis%b(ii)%enex - statebasis%b(ii)%dissThresh .lt. 0.0_dp) then
+    	        write(71,*) statebasis%b(ii)%v, statebasis%b(ii)%df(1)
+				   end if
+        end if 
+        if (statebasis%b(ii)%stlabel .eq. 'B1Su' ) then
+					 if (statebasis%b(ii)%enex - statebasis%b(ii)%dissThresh .lt. 0.0_dp) then
+    	        write(72,*) statebasis%b(ii)%v, statebasis%b(ii)%df(1)
+				   end if
+        end if 
+   	end do
+  end if
+  close(71)
+  close(72)
+
+
+        deallocate(totalC1PuDiss,totalB1SuDiss,totalb3SuDiss,totala3SgDiss,totalc3PuDiss,totalEF1SgDiss)
         deallocate(forWriting)
         deallocate(boundX1SgCs) 
         deallocate(boundB1SuCs)

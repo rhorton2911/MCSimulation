@@ -23,6 +23,7 @@ module input_data
          integer:: momOp           !momOp (0=formula,1=momentum transfer cs)
          integer::distortSdcsOp   !option to distort sdcs to investigate sensitivity to SDCS values
          integer:: vcsop          !Option of whether or not to use vibrational cross sections
+	 integer:: groundVibOp    !Option of whether or not to restrict recording of vibrational excitations by primary to ground state only (1=yes, 0=no)
          integer:: dissOn         !Option for whether or not to allow dissociative excitation (1=yes, 0=no)
          !integer:: numVib
          integer:: radop          !Path length distribution option(1=exponential,0=constant mean)
@@ -55,6 +56,7 @@ module input_data
                                             filename_dcs => NULL(), filename_dcsinel => NULL(), filename_dcsinelcor => NULL(), filename_sdcsNew => NULL(), &
                                             filename_vcsEn => NULL(), filename_vcs => NULL(), filename_vcsNew => NULL(), filename_dfVib => NULL(),  &
                                             filename_VcsPseudo => NULL()
+     character(len=80):: filename_X1SgStates
      real(dp):: eV = 27.21138505_dp    !SI to Hartees conversion factor
      real(dp):: bohrRadius = 5.29e-11_dp  !m^2
      real(dp):: eVToSi = 1.60e-19_dp
@@ -156,6 +158,9 @@ contains
         read(nfile,*) self%vcsop
 	if(iwrite .eq. 1) write(*,*) 'vcsop: ', self%vcsop
 
+        read(nfile,*) self%groundVibOp
+	if(iwrite .eq. 1) write(*,*) 'groundVibOp: ', self%groundVibOp
+
         read(nfile,*) self%dissOn
 	if(iwrite .eq. 1) write(*,*) 'dissOn: ', self%dissOn
  
@@ -234,7 +239,6 @@ contains
     read(nfile,*) self%NvcsEn
     if(iwrite .eq. 1) write(*,*) "NvcsEN: ", self%NvcsEN
     call read_files_block(self,nfile,iwrite,self%NvcsEn,self%filename_vcsEn)
-
 
     read(nfile,*) self%Nvcs
     if(iwrite .eq. 1) write(*,*) 'Nvcs: ', self%Nvcs

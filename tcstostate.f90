@@ -164,8 +164,7 @@ subroutine populatestates(statebasis,tcsbasis)
         print*,'tcstostate.f90: populatestate() 2: could not find a state with this label:',  data_in%filename_addics(i)(5:9)
         stop
      endif
-     if( n .eq. 1) then ! elastic channel
-        vdf(1) = vdf(3)
+     if( n .eq. 1) then ! elastic channel vdf(1) = vdf(3)
         vdf(2) = vdf(3)
      endif
 
@@ -261,7 +260,7 @@ subroutine populateStatesVcs(statebasis,tcsbasis)
     character(len=10)::str11, str12  !Used for file IO
     character(len=10)::enString
     character(len=11)::threshEn
-    real(dp)::deltaE, eMin, eMax, csVal, maxEnInVcs, minEnInVcs, einVal
+    real(dp)::deltaE, eMin, eMax, csVal, maxEnInVcs, minEnInVcs, einVal, dissDiff, dissThreshGround
     real(dp)::groundEn, en1, en2
     character(len=80)::filename
     logical:: ex
@@ -347,6 +346,19 @@ subroutine populateStatesVcs(statebasis,tcsbasis)
     close(23)
     groundEn = stateEn(1)  !Ground state energy in eV
 
+
+    !Read in dissociation threshold for ground electronic state from file
+    filename=data_in%filename_vcsEn(2)
+    dissDiff=0.0_dp
+    dissThreshGround=0.0_dp
+    open(28,file=filename)
+		print*, filename
+    read(28,*)
+    read(28,*)
+    read(28,*) vfVal, en1, en2, dissDiff 
+    close(28)
+    dissThreshGround = abs(dissDiff) 
+
     !Read in vcs for elastic (electronic) scattering (X1Sg -> X1Sg) (vi -> vf)
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     print*, 'read vibrational excitation cross sections (elastic)'
@@ -392,7 +404,6 @@ subroutine populateStatesVcs(statebasis,tcsbasis)
        enddo
        close(nfile)
 
-
        !Find state with label given in filename
        do n=1,Nmaxall
           j = LEN(TRIM(data_in%DATApath)) + 1
@@ -421,6 +432,7 @@ subroutine populateStatesVcs(statebasis,tcsbasis)
        call copy_state(tempbasis(ii),statebasis%b(n))        
        tempbasis(ii)%v = vfVal     !vf in file 
        tempbasis(ii)%en = stateEn(vfVal+1) !State energy (possibly negative) in eV
+       tempbasis(ii)%dissThresh= dissThreshGround !Dissociation threshold (positive), measure from assumed initial state
 
        !Interpolate cross sections to new energy grid 
        allocate(intpCs(size(newGrid)))
@@ -434,10 +446,14 @@ subroutine populateStatesVcs(statebasis,tcsbasis)
        do kk=1, size(newGrid)
           if (newGrid(kk) .gt. maxEnInVcs) then
              intpCs(kk) = 0d0
-          else if (newGrid(jj) .lt. minEnInVcs) then
+          else if (newGrid(kk) .lt. minEnInVcs) then
              intpCs(kk) = 0d0
           end if
        end do
+      ! print*, "Interpolated: ", vfVal, stateEn(vfVal+1) 
+      ! do kk = 1, size(newGrid)
+      !    print*, newGrid(kk), intpCs(kk)
+      ! end do
 
        !Copy cross sections to state type
        deallocate(tempbasis(ii)%ein,tempbasis(ii)%cs)
@@ -451,6 +467,7 @@ subroutine populateStatesVcs(statebasis,tcsbasis)
        call set_df(tempbasis(ii), size(newGrid), newGrid, dfArray) 
        !Include new excitation energies for given v state
        tempbasis(ii)%enex = stateEn(tempbasis(ii)%v+1) - groundEn
+       !print*, "ENEX: ", tempbasis(ii)%enex
        deallocate(intpCs,csArray,eInArray,dfArray)
     end do
     numElastic = ii-1
@@ -750,6 +767,7 @@ subroutine populateStatesVcs(statebasis,tcsbasis)
     !end do
     !stop
 
+
     !Sort newly filled basis by excitation energy
     !call sort_by_energy(statebasis)    
     call sortEnergies(statebasis)
@@ -965,6 +983,22 @@ subroutine readVcsPseudo(statebasis)
 
     !Sort all states by energy
     call sortEnergies(statebasis)
+
+		!Used for testing purposes to switch off excitations of specific states
+	!	do ii = 1, statebasis%n
+	!		 !Switch off dissociative excitations
+	!		 if (statebasis%b(ii)%stlabel .eq. 'C1Pu') then
+	!				if( statebasis%b(ii)%enex - statebasis%b(ii)%dissThresh .lt. 0.0_dp) then
+	!				   statebasis%b(ii)%cs(:) = 0.0_dp
+	!			  end if
+	!		 end if
+	!		 if (statebasis%b(ii)%stlabel .eq. 'B1Su') then
+	!				if( statebasis%b(ii)%enex - statebasis%b(ii)%dissThresh .lt. 0.0_dp) then
+	!				   statebasis%b(ii)%cs(:) = 0.0_dp
+	!			  end if
+	!		 end if
+	!  end do
+
 end subroutine readVcsPseudo
 
 
