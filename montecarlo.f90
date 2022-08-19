@@ -68,6 +68,7 @@ module mc
         real(dp):: tripIonPair  !Triplet excitations per ion pair
         real(dp):: B1SuIonPair  !B1Su excitations per ion pair
         real(dp):: C1PuIonPair  !C1Pu excitations per ion pair
+				integer:: maxCols
 
         integer:: groundv1 !Number of X1Sg(v=1) excitations
         integer:: groundv2 !Number of X1Sg(v=2) excitations
@@ -210,6 +211,7 @@ contains
         end do
         self%numEj(:) = 0
         self%W = 0.0d0 
+				self%maxCols = 0
         self%singIonPair = 0.0d0
         self%tripIonPair = 0.0d0
         self%B1SuIonPair = 0.0d0
@@ -862,7 +864,12 @@ contains
            datamc%C1PuIonPair = datamc%C1PuIonPair + dble(datasim%C1PuExc)/dble(datasim%secE)
         end if    
         !Else, do nothing, no ionisation occured, add zero.
-        
+
+			  !Update maximum number of collisions
+        if (datasim%maxCols .gt. datamc%maxCols) then
+					 datamc%maxCols = datasim%maxCols
+			  end if
+ 
         datamc%groundv1 = datamc%groundv1 + datasim%groundv1
         datamc%groundv2 = datamc%groundv2 + datasim%groundv2     
         if (datasim%groundv1 .gt. 0) then 
@@ -1134,6 +1141,7 @@ contains
       	! write(70,*) 'totalElastics',datamc%elastic,'aveElastics',aveElastics
       	! write(70,*) 'totaldiss',datamc%dissociations,'avediss',avediss
       	
+				write(70,*) 'max number collisions (all sims): ', datamc%maxCols
       	write(70,*) 'ave collisional ionisations',aveIons
       	write(70,*) 'ave collisional excitations',aveExcites
       	write(70,*) 'ave elastic collisions',aveElastics

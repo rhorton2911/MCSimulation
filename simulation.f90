@@ -87,33 +87,38 @@ subroutine mcsimulation(data_input,statebasis,sdcsBasis,eldcs,dicsBasis,VarPs,da
        do while(((partNum.LE.datasim%secE).and.(.not.bmode))  .or.  ((bmode).and.(partNum.eq.0)))	! Tracking of secondary electrons is turned off for the Ps Benchmark (bmode=true)	
           coll = 0	
       	  if(bmode .eqv. .true.) then ! Ps Formation Benchmark Simulation will be run instead of default simulation
-   	     do while((particlebasis(partNum)%energy(coll).GE. 6.80) .AND. (datasim%PsFormed .EQV. .FALSE.)) 			
-   	        particlebasis(partNum)%colls = coll ! Updates the amount of collisions the particle has gone through
-   		datasim%collPerGen(particlebasis(partNum)%gen) = datasim%collPerGen(particlebasis(partNum)%gen) + 1 ! Updates collisions per generation				
+   	         do while((particlebasis(partNum)%energy(coll).GE. 6.80) .AND. (datasim%PsFormed .EQV. .FALSE.)) 			
+   	            particlebasis(partNum)%colls = coll ! Updates the amount of collisions the particle has gone through
+   		          datasim%collPerGen(particlebasis(partNum)%gen) = datasim%collPerGen(particlebasis(partNum)%gen) + 1 ! Updates collisions per generation				
 
-		call collisionsimulation(data_input,statebasis,sdcsBasis,dicsBasis,particlebasis,partNum,coll,simIndex,datasim,ionop,bmode,VarPs,eldcs,Elec)
-		!call timeElapsed(e_energy(x), scattEvent, cs_Ps, cs_el, cs_ion, cs_exc, duration)		
-		!tResTemp = tResTemp + duration
+            		call collisionsimulation(data_input,statebasis,sdcsBasis,dicsBasis,particlebasis,partNum,coll,simIndex,datasim,ionop,bmode,VarPs,eldcs,Elec)
+            		!call timeElapsed(e_energy(x), scattEvent, cs_Ps, cs_el, cs_ion, cs_exc, duration)		
+            		!tResTemp = tResTemp + duration
 				
-		coll = coll + 1 ! Increment to consider the next collision					
-	     end do			
-	  else ! Run default simulation
+            		coll = coll + 1 ! Increment to consider the next collision					
+	           end do			
+	        else ! Run default simulation
              cutoffEn = min_ein  !Cutoff energy for the simulation
              !print*, "Cutoff energy: ", cutoffEn 
-	     do while((particlebasis(partNum)%energy(coll).GE. cutoffEn) .AND. (particlebasis(partNum)%energy(coll) .LE. 700)) 				                               
-	        particlebasis(partNum)%colls = coll ! Updates the amount of collisions the particle has gone through	
-		datasim%collPerGen(particlebasis(partNum)%gen) = datasim%collPerGen(particlebasis(partNum)%gen) + 1	! Updates collisions per generation			
-		call collisionsimulation(data_input,statebasis,sdcsBasis,dicsBasis,particlebasis,partNum,coll,simIndex,datasim,ionop,bmode,VarPs,eldcs,Elec)
-		coll = coll + 1 ! Increment to consider the next collision		
-	     end do
-	  end if
+	           do while((particlebasis(partNum)%energy(coll).GE. cutoffEn) .AND. (particlebasis(partNum)%energy(coll) .LE. 700)) 				                               
+	              particlebasis(partNum)%colls = coll ! Updates the amount of collisions the particle has gone through	
+		            datasim%collPerGen(particlebasis(partNum)%gen) = datasim%collPerGen(particlebasis(partNum)%gen) + 1	! Updates collisions per generation			
+		            call collisionsimulation(data_input,statebasis,sdcsBasis,dicsBasis,particlebasis,partNum,coll,simIndex,datasim,ionop,bmode,VarPs,eldcs,Elec)
+		            coll = coll + 1 ! Increment to consider the next collision		
+	           end do
+	        end if
+         
+				  !Update the max number of collision
+					if (coll .gt. datasim%maxCols) then
+						 datasim%maxCols = coll - 1
+				  end if
+
+	        ! Calculates the highest generation number reached in the Monte Carlo simulation
+	        if(maxgen .LT. particlebasis(partNum)%gen) then
+	           maxgen = particlebasis(partNum)%gen
+	        end if
 		
-	  ! Calculates the highest generation number reached in the Monte Carlo simulation
-	  if(maxgen .LT. particlebasis(partNum)%gen) then
-	     maxgen = particlebasis(partNum)%gen
-	  end if
-		
-	  partNum = partNum + 1	! Increment to consider the next particle
+	        partNum = partNum + 1	! Increment to consider the next particle
        end do	 
  
        !!!!!!!!$OMP CRITICAL
