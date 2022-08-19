@@ -6,7 +6,8 @@ subroutine mcsimulation(data_input,statebasis,sdcsBasis,eldcs,dicsBasis,VarPs,da
     use sdcs_module
     use mc					! contains subroutines for monte carlo simulation
     use input_data	! contains input such as incident energy, benchmark mode
-	  use ParticleDynamics	
+    use ParticleDynamics
+    use AnalyticScattering    
     use Ps_module
     use dcs_module         ! deals with elastic DCS
     use OMP_LIB
@@ -15,7 +16,7 @@ subroutine mcsimulation(data_input,statebasis,sdcsBasis,eldcs,dicsBasis,VarPs,da
     
     ! Input Parameters
     real(dp):: en_incident
-	  real(dp), dimension(3)::Elec
+	  real(dp), dimension(3)::Elec, W !Electric field and drift velocity vectors
     type(input), intent(in):: data_input
     type(basis_state),intent(in):: statebasis
     type(basis_dcs),intent(in):: eldcs    ! keep elastic DCS here
@@ -33,6 +34,7 @@ subroutine mcsimulation(data_input,statebasis,sdcsBasis,eldcs,dicsBasis,VarPs,da
     ! Individual Simulation Parameters  
     type(particle),dimension(0:1000):: particlebasis
     integer:: partNum,coll
+    integer :: TerminateFlag, ConvergenceFlag, ScatteringModel, SteadyStateCounter !Flags for drift velocity convergence, scattering model used
     type(simdata):: datasim
     character (len=60):: ionop ! Ionistation option
     logical:: diss
@@ -56,7 +58,12 @@ subroutine mcsimulation(data_input,statebasis,sdcsBasis,eldcs,dicsBasis,VarPs,da
     ionop = 'positive ionisation energy' 
     ionop = data_input%ionop
     diss = .false.
-	  Elec = (/1.0E-8, 1.0E-8, 1.0E-8/) !Hard code electric field for testing purposes
+	  Elec = (/0.0E-8, 0.0E-8, -3.0E+1/) !Hard code electric field for testing purposes
+          W = (/0.0d0, 0.0d0, 0.0d0/) !Set drift velocity initially to 0
+          ScatteringModel = 2 !Hard coded analytic scattering model for testing purposes
+          TerminateFlag = 0
+          ConvergenceFlag = 0 !Initially set convergence\termination to 0
+          SteadyStateCounter = 0
    
     
     datamc%numSims = totalSims
@@ -91,32 +98,28 @@ subroutine mcsimulation(data_input,statebasis,sdcsBasis,eldcs,dicsBasis,VarPs,da
    	            particlebasis(partNum)%colls = coll ! Updates the amount of collisions the particle has gone through
    		          datasim%collPerGen(particlebasis(partNum)%gen) = datasim%collPerGen(particlebasis(partNum)%gen) + 1 ! Updates collisions per generation				
 
-            		call collisionsimulation(data_input,statebasis,sdcsBasis,dicsBasis,particlebasis,partNum,coll,simIndex,datasim,ionop,bmode,VarPs,eldcs,Elec)
-            		!call timeElapsed(e_energy(x), scattEvent, cs_Ps, cs_el, cs_ion, cs_exc, duration)		
-            		!tResTemp = tResTemp + duration
+		call collisionsimulation(data_input,statebasis,sdcsBasis,dicsBasis,particlebasis,partNum,coll,simIndex,datasim,ionop,bmode,VarPs,eldcs,Elec,ConvergenceFlag,TerminateFlag,SteadyStateCounter,W,ScatteringModel)
+		!call timeElapsed(e_energy(x), scattEvent, cs_Ps, cs_el, cs_ion, cs_exc, duration)		
+		!tResTemp = tResTemp + duration
 				
-            		coll = coll + 1 ! Increment to consider the next collision					
-	           end do			
-	        else ! Run default simulation
-             cutoffEn = min_ein  !Cutoff energy for the simulation
+		coll = coll + 1 ! Increment to consider the next collision					
+	     end do			
+	  else ! Run default simulation
+             cutoffEn = 0.0  !Cutoff energy for the simulation, set to 0 for testing purposes
              !print*, "Cutoff energy: ", cutoffEn 
-	           do while((particlebasis(partNum)%energy(coll).GE. cutoffEn) .AND. (particlebasis(partNum)%energy(coll) .LE. 700)) 				                               
-	              particlebasis(partNum)%colls = coll ! Updates the amount of collisions the particle has gone through	
-		            datasim%collPerGen(particlebasis(partNum)%gen) = datasim%collPerGen(particlebasis(partNum)%gen) + 1	! Updates collisions per generation			
-		            call collisionsimulation(data_input,statebasis,sdcsBasis,dicsBasis,particlebasis,partNum,coll,simIndex,datasim,ionop,bmode,VarPs,eldcs,Elec)
-		            coll = coll + 1 ! Increment to consider the next collision		
-	           end do
-	        end if
-         
-				  !Update the max number of collision
-					if (coll .gt. datasim%maxCols) then
-						 datasim%maxCols = coll - 1
-				  end if
+	     do while((particlebasis(partNum)%energy(coll).GE. cutoffEn) .AND. (particlebasis(partNum)%energy(coll) .LE. 700) .AND. (TerminateFlag .eq. 0)) 				                               
+	        particlebasis(partNum)%colls = coll ! Updates the amount of collisions the particle has gone through	
+		datasim%collPerGen(particlebasis(partNum)%gen) = datasim%collPerGen(particlebasis(partNum)%gen) + 1	! Updates collisions per generation			
+		call collisionsimulation(data_input,statebasis,sdcsBasis,dicsBasis,particlebasis,partNum,coll,simIndex,datasim,ionop,bmode,VarPs,eldcs,Elec,ConvergenceFlag,TerminateFlag,SteadyStateCounter,W,ScatteringModel)
+		coll = coll + 1 ! Increment to consider the next collision		
+	     end do
+	  end if
+		
+	  ! Calculates the highest generation number reached in the Monte Carlo simulation
+	  if(maxgen .LT. particlebasis(partNum)%gen) then
+	     maxgen = particlebasis(partNum)%gen
+	  end if
 
-	        ! Calculates the highest generation number reached in the Monte Carlo simulation
-	        if(maxgen .LT. particlebasis(partNum)%gen) then
-	           maxgen = particlebasis(partNum)%gen
-	        end if
 		
 	        partNum = partNum + 1	! Increment to consider the next particle
        end do	 
@@ -153,14 +156,15 @@ end subroutine mcsimulation
 
 
 
-subroutine collisionsimulation(data_input,statebasis,sdcsBasis,dicsBasis,particlebasis,partNum,coll,simIndex,datasim,ionop,bmode,VarPs,eldcs,Elec)
+subroutine collisionsimulation(data_input,statebasis,sdcsBasis,dicsBasis,particlebasis,partNum,coll,simIndex,datasim,ionop,bmode,VarPs,eldcs,Elec,ConvergenceFlag,TerminateFlag,SteadyStateCounter,W,ScatteringModel)
     use numbers
     use state_class        ! defines states (and basis of them) with operations on them
     use sdcs_module
     use totalcs_module     !  reading totalcs files
     use input_data			! contains input such as incident energy, benchmark mode
     use mc				! contains subroutines for monte carlo simulation
-	  use ParticleDynamics
+    use ParticleDynamics
+    use AnalyticScattering
     use Ps_module
     use dcs_module         ! deals with elastic DCS
     use OMP_LIB	
@@ -169,8 +173,9 @@ subroutine collisionsimulation(data_input,statebasis,sdcsBasis,dicsBasis,particl
     implicit none
     type(input), intent(in)::data_input	 
     type(particle),dimension(0:1000):: particlebasis
-    integer,intent(in):: partNum,coll
-    integer:: simIndex
+    integer,intent(in):: partNum,coll,ScatteringModel
+    integer:: simIndex, i
+    integer,intent(inout):: ConvergenceFlag, TerminateFlag, SteadyStateCounter !Simulation flags updated in this subroutine
     type(simdata),intent(inout):: datasim
     type(basis_state),intent(in):: statebasis
     type(basis_dics),intent(in):: dicsBasis 
@@ -178,6 +183,7 @@ subroutine collisionsimulation(data_input,statebasis,sdcsBasis,dicsBasis,particl
     type(basis_dcs),intent(in):: eldcs    ! keep elastic DCS here
     type(basis_sdcs)::sdcsBasis
 	  real(dp), dimension(3),intent(in)::Elec
+          real(dp), dimension(3),intent(inout)::W
     !type(basis_vcs)::vcsBasis
     type(totalcs):: tcs
     integer:: stateNum
@@ -192,13 +198,19 @@ subroutine collisionsimulation(data_input,statebasis,sdcsBasis,dicsBasis,particl
     mass = 9.11e-31  !Electron mass in SI units
  
     if(bmode .eqv. .false.) then ! Run Default Simulation	
-       call get_csatein(statebasis,particlebasis(partNum)%energy(coll),tcs) ! Create totalcs for the current energy !call print_tcs(tcs) 
+       if(ScatteringModel .eq. 1) then !Use MCCC data
+			call get_csatein(statebasis,particlebasis(partNum)%energy(coll),tcs) ! Create totalcs for the current energy !call print_tcs(tcs) 
+		else if(ScatteringModel .eq. 2) then !Use Reid Ramp model
+			call ReidRampTCS(statebasis,particlebasis(partNum)%energy(coll),tcs)
+		end if
+
        !SYMMETRISE ONLY IN UPDATE_ENERGY, RESELECT POSITIVE ENERGY STATE
        if (data_input%stateIonop .eq. 1) then
           call symTcs(tcs,particlebasis(partNum)%energy(coll))                
        end if    
        call selectstate(tcs,particlebasis(partNum),coll,stateNum) ! Select a state based on totalcs	
 
+       
        !call get_dcsatein(eldcs,particlebasis(partNum)%energy(coll),dcsaten)
        !particlebasis(partNum)%theta(coll) = dcsaten%avang
        if ( data_input%angleop .eq. 1 ) then
@@ -210,6 +222,10 @@ subroutine collisionsimulation(data_input,statebasis,sdcsBasis,dicsBasis,particl
           !Select cos(angle) from differential cross sections(DCS)
           call selectAngle(eldcs,particlebasis(partNum)%energy(coll),cosangle)
           !particlebasis(partNum)%costheta(coll) = cosangle
+          else if ( data_input%angleop .eq. 3) then !Use isotropic scattering, select random theta, in similar way to phi
+
+          call IsotropicAngleSelection(cosangle) !This subroutine is stored in montecarlo.f90
+
        end if
        !Randomly generate an azimuthal scattering angle.
        call RANDOM_NUMBER(randNum)
@@ -220,17 +236,74 @@ subroutine collisionsimulation(data_input,statebasis,sdcsBasis,dicsBasis,particl
        call selectPath(path,stateBasis,particleBasis(partNum)%energy(coll))
        !call update_position(particlebasis(partNum,rad,costheta,phi,coll)   !Update particle position
 
-       call E_Field(particlebasis(partNum),path,cosangle,phi,coll,datasim,Elec,particleBasis(partNum)%energy(coll),statebasis)
-       call update_energy(statebasis,sdcsBasis,eldcs,stateNum,tcs,particlebasis,partNum,cosangle,coll,ionop,data_input%enlossop,datasim,bmode,VarPs) ! Update the energy of the particle	
+       call E_Field(particlebasis(partNum),path,cosangle,phi,coll,datasim,Elec,particleBasis(partNum)%energy(coll),statebasis,tcs,ScatteringModel)
+             !Re-call functions that generate angles\select states based on new tcs found in E_Field
 
 
-       !call testInputData(statebasis, eldcs, sdcsBasis, statebasis%b(1)%ein, size(statebasis%b(1)%ein))
-	     !Where should E_Field go exactly?
+             if (data_input%stateIonop .eq. 1) then
+          call symTcs(tcs,particlebasis(partNum)%energy(coll))
+       end if
+       call selectstate(tcs,particlebasis(partNum),coll,stateNum) ! Select a state based on totalcs
+
+       !call get_dcsatein(eldcs,particlebasis(partNum)%energy(coll),dcsaten)
+       !particlebasis(partNum)%theta(coll) = dcsaten%avang
+       if ( data_input%angleop .eq. 1 ) then
+          !Use mean scattering angle
+          call getAvAngle(eldcs,particlebasis(partNum)%energy(coll),cosangle)
+          !particlebasis(partNum)%costheta(coll) = cosangle ! Set the angle for the current collision
+          !print*, particlebasis(partNum)%energy(coll)
+       else if ( data_input%angleop .eq. 2 ) then
+          !Select cos(angle) from differential cross sections(DCS)
+          call selectAngle(eldcs,particlebasis(partNum)%energy(coll),cosangle)
+          !particlebasis(partNum)%costheta(coll) = cosangle
+       else if ( data_input%angleop .eq. 3) then !Use isotropic scattering, select random theta, in similar way to phi
+
+          call IsotropicAngleSelection(cosangle) !This subroutine is stored in montecarlo.f90
+
+       end if
+
+	   if(ScatteringModel .eq. 1) then
+	   call update_energy(statebasis,sdcsBasis,eldcs,stateNum,tcs,particlebasis,partNum,cosangle,coll,ionop,data_input%enlossop,datasim,bmode,VarPs) ! Update the energy of the particle
+
+	   else if(ScatteringModel .eq. 2) then
+	   call update_energy_analytic(particlebasis, tcs, stateNum, partNum, datasim, coll, statebasis)
+	   end if
+	    !Where should E_Field go exactly?
+	   
+                !Logic to test whether drift velocity convergence has been reached
+	   if(ConvergenceFlag .eq. 1) then
+			SteadyStateCounter = SteadyStateCounter + 1
+			if (SteadyStateCounter .eq. 1000) then
+				TerminateFlag = 1
+                        W(3) = 0.0d0
+			do i = coll-999, coll
+
+                                  W(3) = W(3) + particlebasis(partNum)%velz(i)
+
+			end do
+				W(3) = W(3)/1000.0d0
+				print*, 'Convergence reached, Drift Velocity is: ', W(3)
+			end if
+                end if
+
+                if((ConvergenceFlag .eq. 0 ) .AND. (mod(coll,1001) .eq. 1000)) then
+                        
+                        call DriftVelocityConvergence(W, ConvergenceFlag, particlebasis(partNum), coll)
+                       
+                        print *, 'After collision ', coll, 'drift velocity is: ', W(3)
+                        
+                        if(ConvergenceFlag .eq. 1) then
+                                print*, 'Convergence reached at collision ', coll, 'where drift velocity was: ', W(3)
+                        end if
+                end if
+
 	   
 	     !The below line is commented out as it is the time taken in the case of no E field 
 	     !deltaT = path*SQRT(mass/(2*particleBasis(partNum)%energy(coll)*data_in%evToSi)) 
        !particleBasis(partNum)%time(coll+1) = particlebasis(partNum)%time(coll) + deltaT
+       if(ScatteringModel .eq. 1) then
        call dissociation(particlebasis(partNum),statebasis,stateNum,dicsBasis,tcs,datasim,data_input,coll,partNum)
+       end if
 
        ! Clean up memory
        call delete_totalcs(tcs)

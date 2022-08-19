@@ -8,13 +8,14 @@ module ParticleDynamics
     use Ps_module
     use dcs_module         ! deals with elastic DCS
 	
-public :: E_Field, timeTaken
+public :: E_Field, timeTaken, DriftVelocityConvergence
 
 contains
 
-subroutine E_Field(particleIn,rad,costheta,phi,coll,datasim,Elec,energy,statebasis)
+subroutine E_Field(particleIn,rad,costheta,phi,coll,datasim,Elec,energy,statebasis,tcs,ScatteringModel)
        
-	use numbers
+    use numbers
+    use AnalyticScattering
     use state_class        ! defines states (and basis of them) with operations on them
     use totalcs_module     !  reading totalcs files
     use sdcs_module
@@ -28,7 +29,7 @@ subroutine E_Field(particleIn,rad,costheta,phi,coll,datasim,Elec,energy,statebas
         type(simdata)::datasim
         type(particle),intent(inout)::particleIn
 		real(dp)::energy, energyJ
-        real(dp)::rad, path, costheta, phi, theta
+        real(dp)::rad, path, costheta, phi, theta, randNum
         real(dp)::xVal,yVal,zVal
 		real(dp)::velx, vely, velz
 		real(dp)::time, mass, charge, magVel
@@ -36,10 +37,18 @@ subroutine E_Field(particleIn,rad,costheta,phi,coll,datasim,Elec,energy,statebas
 		real(dp), dimension(3)::Elec !E field, defined in input
 		real(dp), dimension(3)::Acceleration, Velocity
         real(dp), dimension(3,3)::rotMat
-        integer::coll
+        integer::coll, ScatteringModel
+        type(totalcs),intent(out):: tcs
 
 		!Figure out values that will be needed for calculation, acceleration in each direction due to E field, initial velocities
 		theta = ACOS(costheta) 
+
+        !Select positive or negative sign flip for theta 
+        call RANDOM_NUMBER(randNum)
+        if(randNum .lt. 0.5) then 
+                theta = -theta
+        end if
+
 		!Accelerations in x, y, z directions (lab frame)
 		mass = 9.10938356E-31 !mass of an electron in kg
 		charge = 1.60217663E-19 !charge of an electron in C
@@ -47,7 +56,13 @@ subroutine E_Field(particleIn,rad,costheta,phi,coll,datasim,Elec,energy,statebas
 		Acceleration(1) = (Elec(1)*charge)/mass
 		Acceleration(2) = (Elec(2)*charge)/mass
 		Acceleration(3) = (Elec(3)*charge)/mass
-		
+
+                !Test acceleration is what is expected
+                if (mod(coll,1000) .eq. 0) then
+                        print*, 'Acceleration at collision ', coll, 'is: ', Acceleration
+                end if
+
+
 		!print*, 'Acceleration(1) is: ', Acceleration(1)
 		
 		!Velocities in x, y, z directions after collision
@@ -59,11 +74,7 @@ subroutine E_Field(particleIn,rad,costheta,phi,coll,datasim,Elec,energy,statebas
 		Velocity(2) = magVel * sin(theta)*sin(phi)
 		Velocity(3) = magVel * cos(phi)
 		
-		!Update particle velocity for given collision generation
 		
-		particleIn%velx(coll) = Velocity(1)
-		particleIn%vely(coll) = Velocity(2)
-		particleIn%velz(coll) = Velocity(3)
 		particleIn%abs_vel(coll) = magVel
 
         !Begin by taking 'rad' calculated in selectPath, and figuring out time taken
@@ -77,15 +88,22 @@ subroutine E_Field(particleIn,rad,costheta,phi,coll,datasim,Elec,energy,statebas
 		velx = Velocity(1) + Acceleration(1)*time
 		vely = Velocity(2) + Acceleration(2)*time
 		velz = Velocity(3) + Acceleration(3)*time
-		
+
+
 		magVel = sqrt(velx*velx + vely*vely + velz*velz)
 		
 		energyJ = (energyJ + 0.5*mass*magVel*magVel)/2.0
 		
 		energy = energyJ * 6.242E+18
-		
-	
-		
+                !print*, 'tcs eIncident at collision, ', coll, 'is: ', energy
+
+ if(ScatteringModel .eq. 1) then !Use MCCC data
+        call get_csatein(statebasis,energy,tcs) ! Create totalcs for the current energy !call print_tcs(tcs) 
+    else if(ScatteringModel .eq. 2) then !Use Reid Ramp model
+        call ReidRampTCS(statebasis,energy,tcs)
+end if
+
+
 		!Then, calculate path again using new approximated energy
 		call selectPath(path,statebasis,energy)
 		
@@ -142,10 +160,30 @@ subroutine E_Field(particleIn,rad,costheta,phi,coll,datasim,Elec,energy,statebas
 		
 		!Update particle energy - added to current coll value so update_energy functions properly
 		energy = energyJ * 6.242E+18
-		particleIn%energy(coll) = energy
-		
+                particleIn%energy(coll) = energy
+
+        !Perform tcs 1 more time so that selectstate is given tcs at proper collision energy		 
+        if(ScatteringModel .eq. 1) then !Use MCCC data
+                call get_csatein(statebasis,energy,tcs) ! Create totalcs for the current energy !call print_tcs(tcs) 
+        else if(ScatteringModel .eq. 2) then !Use Reid Ramp model
+                call ReidRampTCS(statebasis,energy,tcs)
+        end if
+
+        if(coll .eq. 8000) then
+                print*, 'Collision 8000 reached'
+        else if(coll .eq. 7000) then 
+                print*, 'Collision 7000 reached'
+        else if(coll .eq. 9000) then
+                print*, 'Collision 9000 reached'
+
+         end if
 		!Export time to main simulation
 		deltaT = time
+
+                particleIn%velx(coll) = Velocity(1) + 0.5 * Acceleration(1) * time 
+                particleIn%vely(coll) = Velocity(2) + 0.5 * Acceleration(2) * time
+                particleIn%velz(coll) = Velocity(3) + 0.5 * Acceleration(3) * time
+
 		particleIn%time(coll+1) = particleIn%time(coll) + deltaT
 
 end subroutine E_Field
@@ -211,4 +249,42 @@ subroutine timeTaken(path, Velocity, Acceleration, time)
 	time = time - increment
 
 end subroutine timeTaken
+
+subroutine DriftVelocityConvergence(W, ConvergenceFlag, particleIn, coll)
+
+	real(dp),dimension(3),intent(inout) :: W
+	real(dp) :: W_new
+	real(dp) :: W_old
+	real(dp) :: Difference
+	integer :: i
+	integer,intent(inout) :: ConvergenceFlag
+	type(particle),intent(inout)::particleIn
+	integer,intent(in)::coll
+
+	W_new = 0.0
+	W_old = W(3)
+
+	do i = coll-999, coll
+
+		W_new = W_new + particleIn%velz(i)
+
+	end do
+
+	W_new = W_new/1000.0d0
+
+	Difference = abs((W_old - W_new)/W_new)
+        
+        print*, 'At collision ', coll, 'difference in drifts is: ', Difference
+
+
+	if(Difference .lt. 0.13) then
+		ConvergenceFlag = 1
+	else
+		ConvergenceFlag = 0
+	end if
+
+	W(3) = W_new
+
+end subroutine DriftVelocityConvergence
+
 end module ParticleDynamics
