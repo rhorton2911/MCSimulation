@@ -1,1 +1,6 @@
-# MCSimulation
+MONTE CARLO SIMULATION PROJECT
+
+This project is an attempt to model the process of electron energy deposition in a plasma of hydrogen and helium. The eventual goal of the project is to
+produce energy deposition and fluid parameters for use in macroscopic models of plasmas. These include quantities important to radiation science such as the mean energy per ion pair and input parameters for fluid models such as the viscosity and drift velocity of electrons in the plasma. 
+
+The main difference between this project and other similar approaches is that it is built from the ground up to make use of the highly accurate Molecular Convergent Close-Coupling (MCCC) cross section data set. Monte carlo simulations of plasmas are limited by the accuracy of the input data set describing the collisions of the various species in the plasma. Previously, acccurate collision data in agreement with experiment has been unavaible for molecular targets such as H2. Due to the recenet development of the MCCC method, this is no longer the case. Accurate data is now available for electron scattering on the H2 molcule. The present project makes use of this data, providing a fully vibrationally resolved model of an H2 plasma with an accurate account of both the bound and continuum (electronic and vibrational) states of the molecule.
