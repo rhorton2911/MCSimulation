@@ -1,4 +1,4 @@
-MONTE CARLO SIMULATION PROJECT
+# MONTE CARLO SIMULATION PROJECT
 
 This project is an attempt to model the process of electron energy deposition in a plasma of hydrogen and helium. The eventual goal of the project is to
 produce energy deposition and fluid parameters for use in macroscopic models of plasmas. These include quantities important to radiation science such as the mean energy per ion pair and input parameters for fluid models such as the viscosity and drift velocity of electrons in the plasma. 
