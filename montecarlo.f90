@@ -84,6 +84,7 @@ module mc
         real(dp)::dissHeat  !Amount of kinetic energy released by dissociation
         real(dp)::PDissEn  !Energy of primary electron deposited as heat through dissociation
         real(dp)::PVibEn   !Energy of primary electron lost through vibrational excitation
+				integer:: boundVcs !Number of bound excitations in vcs mode
 
         !Data used for error analysis, collected over a large number of runs
         !of the simulation
@@ -190,6 +191,7 @@ contains
         self%dissHeat = 0.0d0
         self%PDissEn = 0.0d0
         self%PVibEn = 0.0d0
+				self%boundVcs = 0
 
         do i = 1,1000
 	   self%ePerGen(i) = 0
@@ -811,13 +813,15 @@ contains
            end if
         else if ((statebasis%b(stateNum)%resolved) .and. (statebasis%b(stateNum)%enex - statebasis%b(stateNum)%dissThresh .lt. 0.0d0))  then
            !Record energy of bound excitation caused by primary
+					 datasim%boundVcs = datasim%boundVcs + 1
+
            if (partNum .eq. 0) then
-	      !print*, TRIM(statebasis%b(stateNum)%stlabel), statebasis%b(stateNum)%v
-	      if ((data_in%groundVibOp .eq. 1) .and. (TRIM(statebasis%b(stateNum)%stlabel) .eq. 'X1Sg')) then
+	            !print*, TRIM(statebasis%b(stateNum)%stlabel), statebasis%b(stateNum)%v
+	            if ((data_in%groundVibOp .eq. 1) .and. (TRIM(statebasis%b(stateNum)%stlabel) .eq. 'X1Sg')) then
                  datasim%PVibEn = datasim%PVibEn + statebasis%b(stateNum)%enex 
               else if (data_in%groundVibOp .eq. 0) then
-                 datasim%PVibEn = datasim%PVibEn + statebasis%b(stateNum)%enex 
-	      end if
+                    datasim%PVibEn = datasim%PVibEn + statebasis%b(stateNum)%enex 
+	            end if
            end if
         end if
         !end if
@@ -886,6 +890,7 @@ contains
         datamc%dissHeat = datamc%dissHeat + datasim%dissHeat
         datamc%PDissEn = datamc%PDissEn + datasim%PDissEn
         datamc%PVibEn = datamc%PVibEn + datasim%PVibEn
+				datamc%boundVcs = datamc%boundVcs + datasim%boundVcs
 
       	do i=1,maxgen
       	   datamc%ePerGen(i) = datamc%ePerGen(i) + datasim%ePerGen(i) 
@@ -1094,7 +1099,7 @@ contains
         real(dp):: aveB1SuDiss, aveC1PuDiss !Average number of singlet B and C dissociations (both predissociation and radiative decay) 
         real(dp):: avePDissEn    !Average amount of primary energy lost through direct dissociative excitation.
         real(dp):: avePVibEn  !Average energy of primary electron lost through vibrational excitation 
-
+				real(dp):: aveBoundVcs !Average number of bound excitations in vibrationally resolved mode
  
         eIon = 15.96632 !Ionisation energy of ground state H2 (eV)	
 	
@@ -1146,7 +1151,7 @@ contains
       	write(70,*) 'ave collisional excitations',aveExcites
       	write(70,*) 'ave elastic collisions',aveElastics
       	if(.NOT. bmode) then
-      		write(70,*) 'ave dissociations',avediss
+      		write(70,*) 'ave dissociations (tot)',avediss
       	end if
       	
       	if(bmode) then ! Ps Formation Benchmark Run
@@ -1199,6 +1204,7 @@ contains
            aveExcTotal = 0.0
            aveElTotal = 0.0
            aveCollTotal = 0.0
+					 aveBoundVcs = 0.0_dp
 
            !Print results for secondary electrons overall 
            do i =1,maxgen
@@ -1238,6 +1244,7 @@ contains
            aveC1PuDiss = (float(datamc%C1PuDiss)/float(totalSims))/aveIons
            avePDissEn = (datamc%PDissEn/float(totalSims))/en_incident 
            avePVibEn = (datamc%PVibEn/float(totalSims))/en_incident
+					 aveBoundVcs = (float(datamc%boundVcs)/float(totalSims))
 
            write(70,*) '_________________________________________________'
            write(70,*) 'dissociative effects:'
@@ -1252,6 +1259,7 @@ contains
            write(70,*) 'ave kinetic energy released through dissociation (eV): ', aveDissHeat 
            write(70,*) 'ave fraction of primary energy deposited as heat through dissociation: ', avePDissEn
            write(70,*) 'ave fraction of primary energy lost through vibrational excitation: ', avePVibEn
+					 write(70,*) 'ave total number of bound excitations in vcs mode: ', aveBoundVcs 
 	end if
 	
 	
