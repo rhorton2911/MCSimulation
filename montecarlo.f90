@@ -487,10 +487,10 @@ contains
                     !call inelasticScattering(particlebasis(partNum)%energy(coll),enex,particlebasis(partNum)%costheta(coll),inElEnergyLoss,bmode)
                     !particlebasis(partNum)%energy(coll+1) = particlebasis(partNum)%energy(coll) - inElEnergyLoss
                  end if
-	         call init_particle(particlebasis(datasim%secE),secE,particlebasis(partNum)%gen + 1,particlebasis(partNum)%x(coll),particlebasis(partNum)%y(coll),&
+	               call init_particle(particlebasis(datasim%secE),secE,particlebasis(partNum)%gen + 1,particlebasis(partNum)%x(coll),particlebasis(partNum)%y(coll),&
                                     particlebasis(partNum)%z(coll), particlebasis(partNum)%time(coll))
                  call recordEjEn(secE,datasim)
-	         datasim%enPerGen(particlebasis(partNum)%gen + 1) = datasim%enPerGen(particlebasis(partNum)%gen+1) + secE
+	               datasim%enPerGen(particlebasis(partNum)%gen + 1) = datasim%enPerGen(particlebasis(partNum)%gen+1) + secE
 
                  !ejEnSelected = en
 	         ! sec E created with energy equal to positive cont. ionisation energy, its generation is the one after the current generation

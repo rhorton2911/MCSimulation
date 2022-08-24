@@ -84,7 +84,7 @@ subroutine mcsimulation(data_input,statebasis,sdcsBasis,eldcs,dicsBasis,VarPs,da
        !print*, "Thread Num: ", OMP_GET_THREAD_NUM()
        !print*, "SIMINDEX: ", simIndex
 	
-       do while(((partNum.LE.datasim%secE).and.(.not.bmode))  .or.  ((bmode).and.(partNum.eq.0)))	! Tracking of secondary electrons is turned off for the Ps Benchmark (bmode=true)	
+       do while((((partNum.LE.datasim%secE).and.(.not.bmode)).and.(.not.(data_in%trackSecEl.eq.0)))  .or. (((bmode).and.(partNum.eq.0)) .or. ((data_in%trackSecEl .eq. 0) .and. (partNum .eq. 0))))	! Tracking of secondary electrons is turned off for the Ps Benchmark (bmode=true)	
           coll = 0	
       	  if(bmode .eqv. .true.) then ! Ps Formation Benchmark Simulation will be run instead of default simulation
    	         do while((particlebasis(partNum)%energy(coll).GE. 6.80) .AND. (datasim%PsFormed .EQV. .FALSE.)) 			

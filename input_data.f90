@@ -11,6 +11,7 @@ module input_data
          real(dp):: density         ! Density of the medium 
 	       integer:: totalSims        ! total number of simulations
          integer:: debugOp          ! Debug option, runs tests on cross sections, printing results to files.
+				 integer:: trackSecEl            !Debugging option to switch of secondary electron tracking (0 = switch off, 1 = leave on)
          integer:: totalVariations  !total number of time to vary input parameters for unceratainty propagation
          integer:: numToWrite     !Number of simulations to write to file for visualization.
          integer:: benchmarkOp    !run using benchmark cross sections (0 = don't run, 1 = use Garvey and Green CS) 
@@ -118,6 +119,9 @@ contains
    
       read(nfile,*) self%debugOp
       if(iwrite .eq. 1) write(*,*) 'debugOp: ', self%debugOp
+
+      read(nfile,*) self%trackSecEl
+      if(iwrite .eq. 1) write(*,*) 'trackSecE: ', self%trackSecEl
 
     	read(nfile,*) self%totalVariations
     	if(iwrite .eq. 1) write(*,*) 'totalVariations: ', self%totalVariations
