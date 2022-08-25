@@ -999,26 +999,6 @@ subroutine readVcsPseudo(statebasis)
 	!		 end if
 	!  end do
 
-!		do ii = 1, statebasis%n 
-!			 if ((statebasis%b(ii)%stlabel .ne. 'b3Su') .and. (statebasis%b(ii)%stlabel .ne. 'X1Sg')) then
-!					   statebasis%b(ii)%cs(:) = 0.0_dp
-!			 end if
-
-!			 !Switch off dissociative excitations
-!			 if (statebasis%b(ii)%stlabel .eq. 'a3Sg') then
-!					   statebasis%b(ii)%cs(:) = 0.0_dp
-!			 end if
-!			 if (statebasis%b(ii)%stlabel .eq. 'EF1Sg') then
-!					   statebasis%b(ii)%cs(:) = 0.0_dp
-!			 end if
-!			 if (statebasis%b(ii)%stlabel .eq. 'C1Pu') then
-!					   statebasis%b(ii)%cs(:) = 0.0_dp
-!			 end if
-!			 if (statebasis%b(ii)%stlabel .eq. 'B1Su') then
-!					   statebasis%b(ii)%cs(:) = 0.0_dp
-!			 end if
-!	  end do
-!
 end subroutine readVcsPseudo
 
 

@@ -12,6 +12,8 @@ module input_data
 	       integer:: totalSims        ! total number of simulations
          integer:: debugOp          ! Debug option, runs tests on cross sections, printing results to files.
 				 integer:: trackSecEl            !Debugging option to switch of secondary electron tracking (0 = switch off, 1 = leave on)
+				 integer:: numStatesIn
+				 character(len=8), dimension(10):: statesToUse !List of H2 electronic states (including ionisation) to use.  
          integer:: totalVariations  !total number of time to vary input parameters for unceratainty propagation
          integer:: numToWrite     !Number of simulations to write to file for visualization.
          integer:: benchmarkOp    !run using benchmark cross sections (0 = don't run, 1 = use Garvey and Green CS) 
@@ -24,7 +26,7 @@ module input_data
          integer:: momOp           !momOp (0=formula,1=momentum transfer cs)
          integer::distortSdcsOp   !option to distort sdcs to investigate sensitivity to SDCS values
          integer:: vcsop          !Option of whether or not to use vibrational cross sections
-	 integer:: groundVibOp    !Option of whether or not to restrict recording of vibrational excitations by primary to ground state only (1=yes, 0=no)
+	       integer:: groundVibOp    !Option of whether or not to restrict recording of vibrational excitations by primary to ground state only (1=yes, 0=no)
          integer:: dissOn         !Option for whether or not to allow dissociative excitation (1=yes, 0=no)
          !integer:: numVib
          integer:: radop          !Path length distribution option(1=exponential,0=constant mean)
@@ -77,7 +79,7 @@ contains
       integer, intent(in):: iwrite  ! if =1 write to screen the read data, =0 no writing to screen
       real(dp):: eV, en_eV
       logical:: ex
-      integer:: iostat_data, itcstype, iaddtcstype, idftype, isdcstype
+      integer:: iostat_data, itcstype, iaddtcstype, idftype, isdcstype, ii
       character(len=20):: mode
       character(len=60)::tempDataPath
 
@@ -122,6 +124,18 @@ contains
 
       read(nfile,*) self%trackSecEl
       if(iwrite .eq. 1) write(*,*) 'trackSecE: ', self%trackSecEl
+
+      read(nfile,*) self%numStatesIn
+      if(iwrite .eq. 1) write(*,*) 'numStatesIn: ', self%numStatesIn
+				
+			if (self%numStatesIn .ne. 0) then
+         read(nfile,*) (self%statesToUse(ii), ii=1, self%numStatesIn) 
+         if(iwrite .eq. 1) write(*,*) 'statesToUse: ',  (self%statesToUse(ii), ii=1, self%numStatesIn)
+			else if (self%numStatesIn .eq. 0) then
+				 !Default simulation, use all states.
+				 self%statesToUse(:) = ""
+				 read(nfile,* ) 
+			end if
 
     	read(nfile,*) self%totalVariations
     	if(iwrite .eq. 1) write(*,*) 'totalVariations: ', self%totalVariations

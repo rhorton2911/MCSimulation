@@ -14,7 +14,7 @@ program main
  
   implicit none
  
-  logical:: ex
+  logical:: ex, useState
   integer:: nfile, n
   type(basis_totalcs):: tcsbasis
   character(len=40):: filename
@@ -163,6 +163,24 @@ program main
         call populateStatesVcs(statebasis,tcsbasis)
         call readVcsPseudo(statebasis)
      end if
+
+		 useState = .false.
+     if (data_in%numStatesIn .ne. 0) then
+				do ii = 1, statebasis%n
+			     useState = .false.
+					 jj=1
+			     do while ((useState .eqv. .false.) .and. (jj .le. data_in%numStatesIn))
+				      if (statebasis%b(ii)%stlabel .eq. trim(data_in%statesToUse(jj))) then
+                 useState = .true.
+					    end if
+              jj = jj+1
+			     end do
+					   
+					 if (useState .eqv. .false.) then
+							statebasis%b(ii)%cs(:) = 0.0_dp
+				   end if
+	      end do
+		 end if
 
      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!        <<<<<<<<-----------------
      !!!!!!!!!!!!!!!!!!!!!!!!!Return to this for testing !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!        <<<<<<<<-----------------

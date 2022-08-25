@@ -4,6 +4,8 @@ H2
 100000   ! Number of simulations
 0   !Debug Option (0=Production Mode, 1= Run tests)
 1   !Secondary electron tracking option (0=don't track, 1 = track) (Use 1 for full simulation)
+0   !Number of H2 electronic states to use, read from following line. (0=use all, full simulation)
+X1Sg b3Su a3Sg B1Su EF1Sg C1Pu ION   !('all'= full simulation, .e.g X1Sg b3Su ... = exclude all but these)
 1   !Number of variations of input parameters to run (1 for full MC with no uncertainty propagation)
 3 !Number of simulations to write to file for visualization.
 0 !Benchmark cross section option (0= don't use, 1=use Garvey and Green (1976) CS.
