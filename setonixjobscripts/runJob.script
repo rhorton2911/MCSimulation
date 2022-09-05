@@ -1,0 +1,24 @@
+#!/bin/bash -l
+
+#Script: runJob.script
+#Purpose: generic job submission script for running monte carlo code
+#         Written for submitting MPI+openMp jobs to setonix
+
+#Specify resources required on setonix nodes using SLURM directives.
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --ntasks-per-node=1
+#SBATCH --exclusive
+#SBATCH --cpus-per-task=22
+#SBATCH --time=00:20:00
+#SBATCH --export=NONE
+
+#---Environment setup for running job---#
+export OMP_NUM_THREADS=22
+export OMP_STACKSIZE=3000m
+
+echo "Running monte carlo simulation" 
+
+srun -N 1 -n 1 -c 22 $MYSCRATCH/MCProduction/main 
+#---End scripts---#
+

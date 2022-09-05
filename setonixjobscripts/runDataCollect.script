@@ -1,0 +1,24 @@
+#!/bin/bash -l
+
+#Script: runDataCollect.script
+#Purpose: generic job submission script for running monte carlo code
+#         Written for submitting MPI+openMp jobs to setonix. Used to 
+#         submit a job to run the data collection script
+
+#Specify resources required on setonix nodes using SLURM directives.
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --ntasks-per-node=1
+#SBATCH --exclusive
+#SBATCH --cpus-per-task=22
+#SBATCH --time=00:10:00
+#SBATCH --export=NONE
+
+#---Environment setup for running job---#
+export OMP_NUM_THREADS=1
+export OMP_STACKSIZE=3000m
+
+echo "Collecting Data"
+
+bash $MYSOFTWARE/workflow/MCExtraction/collectData.sh
+#---End scripts---#

@@ -38,13 +38,13 @@ e = intp.o numbers.o input_data.o states.o elasticdcs.o totalcs.o tcstostate.o s
 
 ##------------------------------------------- gfortran compiler setup -------------------------------##
 ###DEBUGGING FLAGS###
-a = -Wall -Wextra -pedantic -Warray-bounds -fbacktrace -fopenmp -frecursive -g -Og \
+#a = -Wall -Wextra -pedantic -Warray-bounds -fbacktrace -fopenmp -frecursive -g -Og \
     -fimplicit-none -fcheck=all -ffree-line-length-none -fdefault-integer-8 -m64 -Wno-tabs
 
 #fclink = -fdefault-integer-8 -m64 
 
 ###Production Flags - Enable Optimisations###
-#a = -ffree-line-length-none -fopenmp -fdefault-integer-8 -m64
+a = -ffree-line-length-none -fopenmp -fdefault-integer-8 -m64 -O3
 ##---------------------------------------------------------------------------------------------------##
  
 #ftn is a fortran compiler wrapper provided by Pawsey. Compiler used is selected based on the current programming environment.
