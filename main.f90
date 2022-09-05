@@ -171,6 +171,7 @@ program main
 					 jj=1
 			     do while ((useState .eqv. .false.) .and. (jj .le. data_in%numStatesIn))
 				      if (statebasis%b(ii)%stlabel .eq. trim(data_in%statesToUse(jj))) then
+								 print*, statebasis%b(ii)%stlabel
                  useState = .true.
 					    end if
               jj = jj+1

@@ -1055,7 +1055,7 @@ contains
       end do         
       
       !Introduce a positive energy state modelling ionisation.
-      ionString = "ION"
+      ionString = "ION-H2"
       call init_state(statebasis%b(numStates+2),ionString, 30.0_dp, I, 0, 0, 0, 0.0_dp, .true.)  !State quantum numbers undefined, use 0.
       close(70)
 

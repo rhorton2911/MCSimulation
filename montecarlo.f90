@@ -1256,6 +1256,14 @@ contains
            write(70,*) 'ave dissociations per ion pair (b3Su): ', aveDIb
            write(70,*) 'ave dissociations per ion pair (B1Su): ', aveB1SuDiss
            write(70,*) 'ave dissociations per ion pair (C1Pu): ', aveC1PuDiss
+           write(70,*) 'ave dissociations (total): ', avediss
+           write(70,*) 'ave dissociations (primary): ', aveDissTotal   !This variable actually measures secondary electron dissociations
+           write(70,*) 'ave dissociations (secondary): ', abs(avediss - aveDissTotal)
+					 write(70,*) 'ave dissociations (singlet): ', dble(datamc%singDiss)/dble(totalSims)
+           write(70,*) 'ave dissociations (triplet): ', dble(datamc%tripDiss)/dble(totalSims)
+           write(70,*) 'ave dissociations (b3Su): ', dble(datamc%b3SuDiss)/dble(totalSims)
+					 write(70,*) 'ave dissociations (B1Su): ', dble(datamc%B1SuDiss)/dble(totalSims)
+           write(70,*) 'ave dissociations (C1Pu): ', dble(datamc%C1PuDiss)/dble(totalSims)
            write(70,*) 'ave kinetic energy released through dissociation (eV): ', aveDissHeat 
            write(70,*) 'ave fraction of primary energy deposited as heat through dissociation: ', avePDissEn
            write(70,*) 'ave fraction of primary energy lost through vibrational excitation: ', avePVibEn

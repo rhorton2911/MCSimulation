@@ -13,7 +13,7 @@ module input_data
          integer:: debugOp          ! Debug option, runs tests on cross sections, printing results to files.
 				 integer:: trackSecEl            !Debugging option to switch of secondary electron tracking (0 = switch off, 1 = leave on)
 				 integer:: numStatesIn
-				 character(len=8), dimension(10):: statesToUse !List of H2 electronic states (including ionisation) to use.  
+				 character(len=8), dimension(100):: statesToUse !List of H2 electronic states (including ionisation) to use.  
          integer:: totalVariations  !total number of time to vary input parameters for unceratainty propagation
          integer:: numToWrite     !Number of simulations to write to file for visualization.
          integer:: benchmarkOp    !run using benchmark cross sections (0 = don't run, 1 = use Garvey and Green CS) 
