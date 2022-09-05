@@ -20,5 +20,5 @@ export OMP_STACKSIZE=3000m
 
 echo "Collecting Data"
 
-bash $MYSOFTWARE/workflow/MCExtraction/collectData.sh
+bash $MYSOFTWARE/MCSimulation/setonixjobscripts/MCExtraction/collectData.sh
 #---End scripts---#
