@@ -8,56 +8,10 @@ module AnalyticScattering
     use Ps_module
     use dcs_module         ! deals with elastic DCS
 	
-	public :: ReidRampTCS, update_energy_analytic
+	public :: update_energy_analytic
 	
 	contains
-	
-	subroutine ReidRampTCS(statebasis,eincident,tcs)
-	
-		type(totalcs), intent(out):: tcs
-		real(dp), intent(in):: eincident
-		type(basis_state), intent(in):: statebasis
-                integer::i,Nmax,tcstype
-
-		
-		if(eincident .lt. 0.2) then
-			
-			Nmax = 1 !Only elastic scattering possible
-		
-		else 
-		
-			Nmax = 2 !Toy inelastic channel open
-		
-		end if
-
-                tcstype = statebasis%tcstype                
-		call new_totalcs(tcs,Nmax,tcstype) !Create tcs structure
-		
-		!Populate parameters of tcs
-		
-		tcs%en_incident = eincident 
-		tcs%tcstype = statebasis%tcstype
-		
-		do i=1,Nmax
-			tcs%nf(i) = i
-			tcs%ni(i) = 1  
-			if(i .eq. 1) then !Populate total cross sections for interaction tydpe (GIVEN HERE IN AMSTRONG, MUST BE CONVERTED TO ATOMIC UNITS AT SOME STAGE)
-				tcs%CS(i) = 6.0d0
-			else if(i .eq. 2) then
-				tcs%CS(i) = 10.0d0 * (eincident - 0.2d0)
-			end if
-			
-			if(i .eq. 1) then !Populate energy of states
-			tcs%en(i) = 0.0d0  !Energy of state with reference to some reference energy, set to zero for elastic, 0.2 for inelastic
-			else if (i .eq. 2) then
-			tcs%en(i) = 0.2d0
-			end if
-			tcs%df(i) = 0.0d0 !Dissociative fraction, zero for toy model
-		enddo
-	
-	end subroutine
-
-        subroutine update_energy_analytic(particlebasis, tcs, stateNum, partNum, datasim, coll, statebasis)
+	subroutine update_energy_analytic(particlebasis, tcs, stateNum, partNum, datasim, coll, statebasis)
 		use state_class
         use totalcs_module
         use Ps_module
@@ -88,5 +42,5 @@ module AnalyticScattering
 	end if
 
 	end subroutine
-	
+
 end module AnalyticScattering

@@ -28,7 +28,7 @@ subroutine E_Field(particleIn,rad,costheta,phi,coll,datasim,Elec,energy,statebas
 	    type(basis_state),intent(in):: statebasis
         type(simdata)::datasim
         type(particle),intent(inout)::particleIn
-		real(dp)::energy, energyJ
+		real(dp)::energy, energyJ, energyInit, energyJInit
         real(dp)::rad, path, costheta, phi, theta, randNum
         real(dp)::xVal,yVal,zVal
 		real(dp)::velx, vely, velz
@@ -42,7 +42,6 @@ subroutine E_Field(particleIn,rad,costheta,phi,coll,datasim,Elec,energy,statebas
 
 		!Figure out values that will be needed for calculation, acceleration in each direction due to E field, initial velocities
 		theta = ACOS(costheta) 
-
         !Select positive or negative sign flip for theta 
         call RANDOM_NUMBER(randNum)
         if(randNum .lt. 0.5) then 
@@ -53,13 +52,15 @@ subroutine E_Field(particleIn,rad,costheta,phi,coll,datasim,Elec,energy,statebas
 		mass = 9.10938356E-31 !mass of an electron in kg
 		charge = 1.60217663E-19 !charge of an electron in C
 		energyJ = energy * 1.60218E-19
-		Acceleration(1) = (Elec(1)*charge)/mass
-		Acceleration(2) = (Elec(2)*charge)/mass
-		Acceleration(3) = (Elec(3)*charge)/mass
+                energyInit = energy
+                energyJInit = energyJ
+		Acceleration(1) = -(Elec(1)*charge)/mass
+		Acceleration(2) = -(Elec(2)*charge)/mass
+		Acceleration(3) = -(Elec(3)*charge)/mass
 
                 !Test acceleration is what is expected
                 if (mod(coll,1000) .eq. 0) then
-                        print*, 'Acceleration at collision ', coll, 'is: ', Acceleration
+                        !print*, 'Acceleration at collision ', coll, 'is: ', Acceleration
                 end if
 
 
@@ -73,45 +74,17 @@ subroutine E_Field(particleIn,rad,costheta,phi,coll,datasim,Elec,energy,statebas
 		Velocity(1) = magVel * costheta*sin(phi)
 		Velocity(2) = magVel * sin(theta)*sin(phi)
 		Velocity(3) = magVel * cos(phi)
-		
-		
 		particleIn%abs_vel(coll) = magVel
 
-        !Begin by taking 'rad' calculated in selectPath, and figuring out time taken
-		!print*, 'Before timeTaken call', coll
-		call timeTaken(rad, Velocity, Acceleration, time)
-		!print*, 'After timeTaken call', coll
-		
-		
-		
-		!Next, establish average kinetic energy of initial and final positions
-		velx = Velocity(1) + Acceleration(1)*time
-		vely = Velocity(2) + Acceleration(2)*time
-		velz = Velocity(3) + Acceleration(3)*time
+                !PathConvergence uses the mean free path to find convergent tcs, energy
+                call PathConvergence(rad,time,datasim,statebasis,Velocity,Acceleration,tcs,ScatteringModel)
 
-
-		magVel = sqrt(velx*velx + vely*vely + velz*velz)
-		
-		energyJ = (energyJ + 0.5*mass*magVel*magVel)/2.0
-		
-		energy = energyJ * 6.242E+18
-                !print*, 'tcs eIncident at collision, ', coll, 'is: ', energy
-
- if(ScatteringModel .eq. 1) then !Use MCCC data
-        call get_csatein(statebasis,energy,tcs) ! Create totalcs for the current energy !call print_tcs(tcs) 
-    else if(ScatteringModel .eq. 2) then !Use Reid Ramp model
-        call ReidRampTCS(statebasis,energy,tcs)
-end if
-
-
-		!Then, calculate path again using new approximated energy
-		call selectPath(path,statebasis,energy)
-		
-		
+        
+                !Now sample path at correct energy
+                call selectPath(path,statebasis,energy,ScatteringModel)
 		!Calculate new time taken, which will be the time returned to the simulation
 		call timeTaken(path, Velocity, Acceleration, time)
 		!print *, 'Time taken for collision ', coll, 'is: ', time
-		
 		!Update position, position from origin, energy, for new collision
 		velx = Velocity(1) + Acceleration(1)*time
 		vely = Velocity(2) + Acceleration(2)*time
@@ -144,7 +117,7 @@ end if
 		particleIn%x(coll+1) = particleIn%x(coll) + Velocity(1)*time + 0.5*Acceleration(1)*time*time
 		particleIn%y(coll+1) = particleIn%y(coll) + Velocity(2)*time + 0.5*Acceleration(2)*time*time
 		particleIn%z(coll+1) = particleIn%z(coll) + Velocity(3)*time + 0.5*Acceleration(3)*time*time
-		
+
         !Below lines commented out, were originally from straight-trajectory "update_position"
 		
 		!particleIn%x(coll+1) = particleIn%x(coll) + rad*particleIn%zHat(1)
@@ -169,22 +142,16 @@ end if
                 call ReidRampTCS(statebasis,energy,tcs)
         end if
 
-        if(coll .eq. 8000) then
-                print*, 'Collision 8000 reached'
-        else if(coll .eq. 7000) then 
-                print*, 'Collision 7000 reached'
-        else if(coll .eq. 9000) then
-                print*, 'Collision 9000 reached'
-
-         end if
 		!Export time to main simulation
-		deltaT = time
 
-                particleIn%velx(coll) = Velocity(1) + 0.5 * Acceleration(1) * time 
-                particleIn%vely(coll) = Velocity(2) + 0.5 * Acceleration(2) * time
-                particleIn%velz(coll) = Velocity(3) + 0.5 * Acceleration(3) * time
+                !Update velocities in particle structure
+                !Multiply by 0.5 again so that the velocity is halfway along the path (average)
 
-		particleIn%time(coll+1) = particleIn%time(coll) + deltaT
+                particleIn%velx(coll) = Velocity(1) + 0.5 * Acceleration(1) * time * 0.5
+                particleIn%vely(coll) = Velocity(2) + 0.5 * Acceleration(2) * time * 0.5
+                particleIn%velz(coll) = Velocity(3) + 0.5 * Acceleration(3) * time * 0.5
+
+		particleIn%time(coll+1) = particleIn%time(coll) + time
 
 end subroutine E_Field
 	
@@ -243,7 +210,6 @@ subroutine timeTaken(path, Velocity, Acceleration, time)
 		time = time + increment
 		!print *, "Current integral in loop is: ", integral
 	end do
-	!print*, 'After do loop'
 	
 	!Export time taken
 	time = time - increment
@@ -274,10 +240,10 @@ subroutine DriftVelocityConvergence(W, ConvergenceFlag, particleIn, coll)
 
 	Difference = abs((W_old - W_new)/W_new)
         
-        print*, 'At collision ', coll, 'difference in drifts is: ', Difference
+        !print*, 'At collision ', coll, 'difference in drifts is: ', Difference
 
 
-	if(Difference .lt. 0.13) then
+	if(Difference .lt. 0.25) then
 		ConvergenceFlag = 1
 	else
 		ConvergenceFlag = 0
@@ -286,5 +252,86 @@ subroutine DriftVelocityConvergence(W, ConvergenceFlag, particleIn, coll)
 	W(3) = W_new
 
 end subroutine DriftVelocityConvergence
+
+subroutine PathConvergence(rad,time,datasim,statebasis,Velocity,Acceleration,tcs,ScatteringModel)
+
+	use numbers
+    use AnalyticScattering
+    use state_class        ! defines states (and basis of them) with operations on them
+    use totalcs_module     !  reading totalcs files
+    use sdcs_module
+    use mc					! contains subroutines for monte carlo simulation
+    use input_data			! contains input such as incident energy, benchmark mode
+    use Ps_module
+    use dcs_module         ! deals with elastic DCS
+
+
+	real(dp), dimension(3)::Acceleration
+	real(dp), dimension(3),intent(inout)::Velocity
+	type(basis_state),intent(in):: statebasis
+	type(totalcs),intent(inout):: tcs
+    type(simdata),intent(in)::datasim
+	integer::ScatteringModel
+	real(dp)::energy, energyJ,sigma,lambda_new,lambda_old,diff, magVel, mass, velx, vely, velz
+	real(dp),intent(out)::time
+	real(dp),intent(inout)::rad
+
+	!Generate total cross section as usual
+
+	if(ScatteringModel .eq. 1) then !Use MCCC data
+		call get_csatein(statebasis,energy,tcs) ! Create totalcs for the current energy !call print_tcs(tcs)
+	else if(ScatteringModel .eq. 2) then !Use Reid Ramp model
+		call ReidRampTCS(statebasis,energy,tcs)
+	end if
+    sigma = SUM(tcs%cs)*(data_in%bohrRadius**2)  !Convert to SI
+
+	!Calculate mean free path for first guess
+	lambda_old = 1/(data_in%density*sigma)
+
+	diff = 1.0
+
+	!Run do loop to calculate convergent value of sigma and lambda
+	do while(diff.gt.0.01)
+
+		!At given guess for lambda, call timeTaken
+		call timeTaken(lambda_old, Velocity, Acceleration, time)
+
+
+
+		!Next, establish average kinetic energy of initial and final positions
+		velx = Velocity(1) + Acceleration(1)*time
+		vely = Velocity(2) + Acceleration(2)*time
+		velz = Velocity(3) + Acceleration(3)*time
+
+		magVel = sqrt(velx*velx + vely*vely + velz*velz)
+
+		energyJ = (energyJ + 0.5*mass*magVel*magVel)/2.0
+
+		energy = energyJ * 6.242E+18
+
+		!Take new cross section at energy halfway along the path
+
+		if(ScatteringModel .eq. 1) then !Use MCCC data
+			call get_csatein(statebasis,energy,tcs) ! Create totalcs for the current energy !call print_tcs(tcs)
+		else if(ScatteringModel .eq. 2) then !Use Reid Ramp model
+			call ReidRampTCS(statebasis,energy,tcs)
+		end if
+
+		!Calculate new lambda based on new TCS
+
+		sigma = SUM(tcs%cs)*(data_in%bohrRadius**2)  !Convert to SI
+		lambda_new = 1/(data_in%density*sigma)
+
+		!Calculate relative difference in lambda's
+		diff = abs((lambda_new - lambda_old)/(lambda_new))
+
+		!Set old lambda for next iteration to be current new lambda
+		lambda_old = lambda_new
+	end do
+
+
+
+
+end subroutine PathConvergence
 
 end module ParticleDynamics

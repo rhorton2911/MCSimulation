@@ -1010,7 +1010,7 @@ contains
            open(70, file="sim"//trim(simString)//".csv")
 
            write(70,*) datasim%secE+1 !Total number of electrons
-           write(70,*) "type,","Incident/Second,","EnSelected,","x(m),","y(m),","z(m),","velx(m/s),","vely(m/s),","velz(m/s),","Diss,","StateNum,","partNum,","Time(s)"               
+           write(70,*) "type,","Incident/Second,","Energy,","x(m),","y(m),","z(m),","velx(m/s),","vely(m/s),","velz(m/s),","Diss,","StateNum,","partNum,","Time(s)"               
            do ii = 0, datasim%secE
               if (ii .eq. 0) then
                  inString = "i"
@@ -1028,7 +1028,7 @@ contains
                  end if 
                  dissString = trim(dissString)//","
 
-                 write(enString,'(e13.5)') particlebasis(ii)%enArr(jj)
+                 write(enString,'(e13.5)') particlebasis(ii)%energy(jj)
                  enString = trim(enString)//","
                  write(xString,'(e13.5)') particlebasis(ii)%x(jj)
                  xString = trim(xString)//","
@@ -1490,12 +1490,13 @@ contains
     !Purpose: selects path length from TCS at given energy.
     !Date last modified: 29/01/2021
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    subroutine selectPath(path,stateBasis,eIncident)
+    subroutine selectPath(path,stateBasis,eIncident,ScatteringModel)
         use state_class
         use totalcs_module
         use input_data
         implicit none
         real(dp)::eIncident, randVal, sigma
+        integer,intent(in)::ScatteringModel
         real(dp),intent(out):: path
         type(basis_state)::stateBasis
         type(totalcs)::tcs
@@ -1503,9 +1504,12 @@ contains
         randVal = 0.0
  
         !Get total cross section at given energy.
-        call get_csatein(stateBasis,eIncident,tcs)
+        if(ScatteringModel .eq. 1) then !Use MCCC data
+                call get_csatein(stateBasis,eIncident,tcs)
+        else if(ScatteringModel .eq. 2) then !Use Reid Ramp model
+                call ReidRampTCS(stateBasis,eIncident,tcs)
+        end if
         sigma = SUM(tcs%cs)*(data_in%bohrRadius**2)  !Convert to SI
- 
         !Draw path length from exponential distribution
         if(data_in%radop .eq. 1) then
            call RANDOM_NUMBER(randVal)
@@ -1653,6 +1657,25 @@ SUBROUTINE timeElapsed(energy,crossSection,datasim)
    
     END SUBROUTINE selectAngle
 
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    !Subroutine: IsotropicAngleSelection
+    !Purpose: For isotropic angular distribution, selects random theta and
+    !returns it to self structure
+    !Date last modified: 04/08/2022
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+    subroutine IsotropicAngleSelection(cosangle)
+        use sdcs_module
+        implicit none
+	real(dp),intent(inout)::cosangle
+	real(dp)::randNum, angle
+
+       call RANDOM_NUMBER(randNum)
+       !particlebasis(partNum)%phi(coll) = randNum*4d0*atan(1.d0)
+       angle = randNum*4d0*atan(1.d0)
+       cosangle = cos(angle)
+
+    end subroutine IsotropicAngleSelection
 
 
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
