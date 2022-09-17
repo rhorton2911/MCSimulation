@@ -10,7 +10,7 @@
 #SBATCH --ntasks-per-node=1
 #SBATCH --exclusive
 #SBATCH --cpus-per-task=22
-#SBATCH --time=00:20:00
+#SBATCH --time=00:25:00
 #SBATCH --export=NONE
 
 #---Environment setup for running job---#

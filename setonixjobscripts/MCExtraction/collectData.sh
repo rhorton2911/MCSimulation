@@ -52,7 +52,7 @@ declare -a headers
 headers[0]="EIn(eV)"
 
 readarray -t enArray < energies.txt
-for en in ${enArray[@]}
+for en in "${enArray[@]}"
 do
    echo "$en"
    cd EN"$en"

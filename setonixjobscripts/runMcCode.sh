@@ -9,15 +9,24 @@
 
 #Create list of incident energies. 
 #Fine grid creates around 275 jobs to submit
-vals=$(seq 0.0 0.25 50.0)
-morevals=$(seq 52.0 2.0 100.0)
-evenmorevals=$(seq 110.0 10.0 120.0)
+#vals=$(seq 0.25 0.25 25.0)
+#yetmorevals=$(seq 25.05 0.05 35.0)
+#anotherset=$(seq 35.25 0.25 50.0)
+#morevals=$(seq 52.0 2.0 100.0)
+#evenmorevals=$(seq 110.0 10.0 500.0)
+
+vals=$(seq 1.0 1.0 19.0)
+yetmorevals=$(seq 20.0 2.0 50.0)
+anotherset=$(seq 75.0 25.0 500.0)
+
 if [ -e tempens.txt ]; then
 	 rm -rf tempens.txt
 fi
 echo "${vals[@]}" >> tempens.txt
-echo "${morevals[@]}" >> tempens.txt
-echo "${evenmorevals[@]}" >> tempens.txt
+echo "${yetmorevals[@]}" >> tempens.txt
+echo "${anotherset[@]}" >> tempens.txt
+#echo "${morevals[@]}" >> tempens.txt
+#echo "${evenmorevals[@]}" >> tempens.txt
 readarray -t enList < tempens.txt
 rm -rf tempens.txt
 
@@ -63,7 +72,7 @@ do
    cp ../input ./data.in
    sed -i "s/yyy/${en}/" data.in
    #Submit job and get the jobId
-   jobId=$(sbatch --partition=work -J MC${en}eV --error=MC${en}eV.err $MYSOFTWARE/workflow/runJob.script | cut -f 4 -d ' ')
+   jobId=$(sbatch --partition=work -J MC${en}eV --error=MC${en}eV.err $MYSOFTWARE/MCSimulation/setonixjobscripts/runJob.script | cut -f 4 -d ' ')
    #jobId=$(sbatch --partition=work -J TEST  $MYSOFTWARE/workflow/test.sh | cut -f 4 -d ' ')  #Used for debugging, keep for convenience
 
    #Save ID of submitted job to array
@@ -82,7 +91,7 @@ done
 
 
 #Wait for all jobs to finish successfully(afterok option) and run cleanup script
-sbatch --dependency=afterok"${dependencies}"  --partition=work -J MCCleanUp $MYSOFTWARE/workflow/runDataCollect.script
+sbatch --dependency=afterok"${dependencies}"  --partition=work -J MCCleanUp $MYSOFTWARE/MCSimulation/setonixjobscripts/runDataCollect.script
 #sbatch --dependency=afterok"${dependencies}"  --partition=work -J MCCleanUp $MYSOFTWARE/workflow/test.sh
 
 
