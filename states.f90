@@ -25,6 +25,7 @@ module state_class
      integer:: v !vibrational quantum number
      real(dp):: dissThresh   !threshold energy (eV) for dissociative excitation(from ground) of state with given electronic label
      logical:: ion   !Tracks whether state corresponds to ionisation (i.e. Is the state bound?)
+     logical:: psFormation  !Tracks if state corresponds to postronium formation
      
   end type state
   !  
@@ -59,6 +60,7 @@ contains
     self%dissThresh = 0.0d0
     self%ion = ion
     self%resolved = .false. 
+    self%psFormation = .false.
 
   end subroutine init_state
   !
@@ -337,6 +339,41 @@ contains
     print*
 
   end subroutine print_energy
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !Subroutine: addState
+  !Purpose: takes in the input state 'self' and adds it to the list of
+  !         states in the statebasis
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  subroutine addState(self,statebasis)
+     implicit none
+     type(state):: self
+     type(basis_state):: statebasis
+     integer:: ii, numStates, tcstype
+     type(state), dimension(:), allocatable:: temp
+
+     allocate(temp(statebasis%n))
+     tcstype = statebasis%tcstype
+
+     do ii = 1, statebasis%n
+        call copy_state(temp(ii), statebasis%b(ii))
+     end do
+     numStates = statebasis%n
+
+     call destruct_basis(statebasis)
+     call new_basis(statebasis,numStates+1,tcstype)
+     do ii = 1, numStates
+        call copy_state(statebasis%b(ii), temp(ii))
+        call destruct_state(temp(ii))
+     end do
+     call copy(statebasis%b(numStates+1), self)
+     deallocate(temp)
+
+  end subroutine addState
+
+
+
+
   !
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! Shellsort algorithm

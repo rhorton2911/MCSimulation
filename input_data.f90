@@ -11,6 +11,7 @@ module input_data
          real(dp):: density         ! Density of the medium 
 	       integer:: totalSims        ! total number of simulations
          integer:: debugOp          ! Debug option, runs tests on cross sections, printing results to files.
+         integer:: posmode          !Positron mode, use positron as incident particle
 				 integer:: trackSecEl            !Debugging option to switch of secondary electron tracking (0 = switch off, 1 = leave on)
 				 integer:: numStatesIn
 				 character(len=8), dimension(100):: statesToUse !List of H2 electronic states (including ionisation) to use.  
@@ -121,6 +122,9 @@ contains
    
       read(nfile,*) self%debugOp
       if(iwrite .eq. 1) write(*,*) 'debugOp: ', self%debugOp
+
+      read(nfile,*) self%posmode
+      if(iwrite .eq. 1) write(*,*) 'posmode: ', self%posmode
 
       read(nfile,*) self%trackSecEl
       if(iwrite .eq. 1) write(*,*) 'trackSecE: ', self%trackSecEl

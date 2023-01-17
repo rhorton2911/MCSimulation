@@ -3,6 +3,7 @@ H2
 500.0   ! Incident particle energy (eV)
 100000   ! Number of simulations
 0   !Debug Option (0=Production Mode, 1= Run tests)
+1   !Positron mode (0=normal electron sim, 1=postron incident particle)
 1   !Secondary electron tracking option (0=don't track, 1 = track) (Use 1 for full simulation)
 0   !Number of H2 electronic states to use, read from following line. (0=use all, full simulation)
 X1Sg b3Su ION-H2 a3Sg B1Su EF1Sg C1Pu c3Pu e3Su g3Sg d3Pu Bp1Su h3Sg K1Sg i3Pg Q1Pg j3Dg J1Dg GK1Sg D1Pu ION-H2  !('all'= full simulation, .e.g X1Sg b3Su ... = exclude all but these)

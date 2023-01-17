@@ -346,6 +346,88 @@ contains
     close(nfile)
     
   end subroutine read_totalcs
+
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !Subroutine: readPsTcs
+  !Purpose: reads in positron scattering electron excitation cross 
+  !         section file, columns are state excitation cross sections
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  subroutine readPsCs(tcsbasis,tcstype,filename)
+    implicit none
+    type(basis_totalcs), intent(inout):: tcsbasis
+    integer, intent(in):: tcstype
+    character(len=40), intent(in):: filename
+    integer:: ii, lines=0, IERR=0, numcols
+    character(len=50) :: a
+
+    open(60,filename)
+    read(60, *) numcols
+    read(60, *)
+    do while (IERR == 0)
+      read(60, *, iostat=IERR) a
+      lines = lines + 1
+    end do
+    lines = lines - 1
+    IERR = 0
+    rewind(60)
+
+    call new_totalcsbasis(tcsbasis,lines,tcstype)
+    do ii = 1, lines
+       call new_totalcs(tcsbasis%b(ii), numcols, tcstype)
+    end do
+
+    read(60,*)
+    do ii = 1, lines
+       read(60,*) tcsbasis%b(ii)%energy, (tcsbasis%b(ii)%cs(jj), jj=1, numcols)
+    end do
+
+    close(60)
+
+  end subroutine readPsCs
+
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !Subroutine: readPsFormCs
+  !Purpose: reads in positronium formation cross sections into
+  !         the input state type
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  subroutine readPsFormCs(self,filename)
+    implicit none
+    type(state):: self
+    character(len=40), intent(in):: filename
+    integer:: ii, lines=0, IERR=0, numcols
+    character(len=50) :: a
+
+    open(60,filename)
+    read(60, *) 
+    read(60, *) 
+    read(60, *)
+    do while (IERR == 0)
+      read(60, *, iostat=IERR) a
+      lines = lines + 1
+    end do
+    lines = lines - 1
+    IERR = 0
+    rewind(60)
+
+    eneV = -1.0_dp
+    enex = -1.0_dp
+
+    call init_state(self,"PsFormation",eneV,enex,-1,-1,-1,-1,1)
+    self%psFormation = .true.
+    
+    do ii = 1, lines
+       read(60,*) self%en(ii), self%cs(ii)
+    end do
+    
+    close(60)
+
+   end subroutine readPsFormCs
+
+
+
+  
  !
   subroutine new_totalcs(self,Nmax,tcstype)
     implicit none

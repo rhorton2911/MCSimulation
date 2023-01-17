@@ -12,6 +12,7 @@ subroutine populatestates(statebasis,tcsbasis)
   parameter(Nlarge = 1000)
   type(basis_totalcs), intent(in):: tcsbasis
   type(basis_state), intent(inout):: statebasis
+  type(state):: psFormation
   integer:: Nmaxall
   logical:: ex
   integer:: i
@@ -130,87 +131,95 @@ subroutine populatestates(statebasis,tcsbasis)
 
   enddo
 !-----------------------------------------------------
-! read AN CS files write them into states
-  print*, 'read AN cross sections from additional CS files'
-  do i=1,data_in%Naddics
-     open(27,file=data_in%filename_addics(i),action='read')
-     do j=1,6
-        read(27,*)
-     enddo
-     j = 2   ! start from 2 and set CS at these points to zero to avoid problems with cubic splines 
-     do 
-        j = j + 1
-        read(27,*,END=137,ERR=137) eindf(j),vdf(j)
-     enddo
-137  continue
-     close(27)
- 
-     iac = j - 1  ! number of energies
- 
-     eindf(1) = eindf(3) - 0.02
-     vdf(1) = 0d0
-     eindf(2) = eindf(3) - 0.01
-     vdf(2) = 0d0
 
-     ! find state with this label
-     do n=1,Nmaxall
-        j = LEN(TRIM(data_in%DATApath)) + 1
-        if(statebasis%b(n)%stlabel .eq. TRIM(data_in%filename_addics(i)(j+5:j+9)) .or. statebasis%b(n)%stlabel .eq. TRIM(data_in%filename_addics(i)(j+5:j+8)) ) then 
-           print*,'found for add. CS:', n,statebasis%b(n)%stlabel  
-           exit
+  if (data_in%posmode .ne. 1) then
+   ! read AN CS files write them into states
+     print*, 'read AN cross sections from additional CS files'
+     do i=1,data_in%Naddics
+        open(27,file=data_in%filename_addics(i),action='read')
+        do j=1,6
+           read(27,*)
+        enddo
+        j = 2   ! start from 2 and set CS at these points to zero to avoid problems with cubic splines 
+        do 
+           j = j + 1
+           read(27,*,END=137,ERR=137) eindf(j),vdf(j)
+        enddo
+   137  continue
+        close(27)
+    
+        iac = j - 1  ! number of energies
+    
+        eindf(1) = eindf(3) - 0.02
+        vdf(1) = 0d0
+        eindf(2) = eindf(3) - 0.01
+        vdf(2) = 0d0
+   
+        ! find state with this label
+        do n=1,Nmaxall
+           j = LEN(TRIM(data_in%DATApath)) + 1
+           if(statebasis%b(n)%stlabel .eq. TRIM(data_in%filename_addics(i)(j+5:j+9)) .or. statebasis%b(n)%stlabel .eq. TRIM(data_in%filename_addics(i)(j+5:j+8)) ) then 
+              print*,'found for add. CS:', n,statebasis%b(n)%stlabel  
+              exit
+           endif
+        enddo
+        if(n .eq. Nmaxall+1) then
+           print*,'tcstostate.f90: populatestate() 2: could not find a state with this label:',  data_in%filename_addics(i)(5:9)
+           stop
+        endif
+        if( n .eq. 1) then ! elastic channel vdf(1) = vdf(3)
+           vdf(2) = vdf(3)
+        endif
+   
+        ! for states that have nonzero M  ( P,D, ...) the next state, n+1, 
+        ! should also have the same label and quantum numbers (but -M), 
+        ! need to write into that state too
+        ! Check that the next state has the same label
+        inext = 0
+        if(statebasis%b(n)%stlabel .eq. statebasis%b(n+1)%stlabel) then
+           inext = 1
+        endif
+        
+        do j=0,inext
+           if (associated(statebasis%b(n+j)%ein)) deallocate(statebasis%b(n+j)%ein)
+           if (associated(statebasis%b(n+j)%cs)) deallocate(statebasis%b(n+j)%cs)
+           allocate(statebasis%b(n+j)%cs(iac),statebasis%b(n+j)%ein(iac))
+   !        call set_csad(statebasis%b(n+j),iac,eindf(1:iac),vdf(1:iac)/dble(1+inext))  ! divide by 2 cross section for non M=0 states 
+           statebasis%b(n+j)%inum = iac 
+           statebasis%b(n+j)%ein(1:iac) = eindf(1:iac)
+           statebasis%b(n+j)%cs(1:iac) = vdf(1:iac)/dble(1+inext)
+   
+           statebasis%b(n+j)%enex = statebasis%b(n)%enex
+           statebasis%b(n+j)%en = statebasis%b(n)%en      
+    
+           !statebasis%b(n+j)%enex = eindf(3)   ! reset excitation energy to the first entry in add. CS files
+           !statebasis%b(n+j)%en = eindf(3) + statebasis%b(1)%en  !Modify ionisation energy
+        enddo
+   
+        !ground state energy of H2+
+        threshold=-0.57644d0
+        do j=1, size(statebasis%b)
+           if (statebasis%b(j)%en .gt. threshold) then
+              statebasis%b(j)%stlabel="ION-H2"
+           end if
+        end do
+   
+   
+   ! ------- Test ------
+        l = 1
+        !Note: data_in is (unfortunately) a global variable defined in input_data.f90
+        if ((l .eq. 1) .and. (data_in%debugOp .eq. 1)) then
+           write(stnumber,'(i4.4)') n
+           filenamest ="oldst_"//stnumber     
+           call print_state(statebasis%b(n),filenamest)
         endif
      enddo
-     if(n .eq. Nmaxall+1) then
-        print*,'tcstostate.f90: populatestate() 2: could not find a state with this label:',  data_in%filename_addics(i)(5:9)
-        stop
-     endif
-     if( n .eq. 1) then ! elastic channel vdf(1) = vdf(3)
-        vdf(2) = vdf(3)
-     endif
+  else
+     call readPsFormCs(psFormation)
+     call addState(statebasis,psFormation)
 
-     ! for states that have nonzero M  ( P,D, ...) the next state, n+1, 
-     ! should also have the same label and quantum numbers (but -M), 
-     ! need to write into that state too
-     ! Check that the next state has the same label
-     inext = 0
-     if(statebasis%b(n)%stlabel .eq. statebasis%b(n+1)%stlabel) then
-        inext = 1
-     endif
-     
-     do j=0,inext
-        if (associated(statebasis%b(n+j)%ein)) deallocate(statebasis%b(n+j)%ein)
-        if (associated(statebasis%b(n+j)%cs)) deallocate(statebasis%b(n+j)%cs)
-        allocate(statebasis%b(n+j)%cs(iac),statebasis%b(n+j)%ein(iac))
-!        call set_csad(statebasis%b(n+j),iac,eindf(1:iac),vdf(1:iac)/dble(1+inext))  ! divide by 2 cross section for non M=0 states 
-        statebasis%b(n+j)%inum = iac 
-        statebasis%b(n+j)%ein(1:iac) = eindf(1:iac)
-        statebasis%b(n+j)%cs(1:iac) = vdf(1:iac)/dble(1+inext)
-
-        statebasis%b(n+j)%enex = statebasis%b(n)%enex
-        statebasis%b(n+j)%en = statebasis%b(n)%en      
- 
-        !statebasis%b(n+j)%enex = eindf(3)   ! reset excitation energy to the first entry in add. CS files
-        !statebasis%b(n+j)%en = eindf(3) + statebasis%b(1)%en  !Modify ionisation energy
-     enddo
-
-     !ground state energy of H2+
-     threshold=-0.57644d0
-     do j=1, size(statebasis%b)
-        if (statebasis%b(j)%en .gt. threshold) then
-           statebasis%b(j)%stlabel="ION-H2"
-        end if
-     end do
-
-
-! ------- Test ------
-     l = 1
-     !Note: data_in is (unfortunately) a global variable defined in input_data.f90
-     if ((l .eq. 1) .and. (data_in%debugOp .eq. 1)) then
-        write(stnumber,'(i4.4)') n
-        filenamest ="oldst_"//stnumber     
-        call print_state(statebasis%b(n),filenamest)
-     endif
-  enddo
+     DUPLICATE DEGENERATE ELECTRONIC STATES
+  end if
  
 
   !do i=1, statebasis%n
