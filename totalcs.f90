@@ -360,6 +360,8 @@ contains
     character(len=40), intent(in):: filename
     integer:: ii, lines=0, IERR=0, numcols
     character(len=50) :: a
+    real(dp), dimension(:), allocatable:: scalefact
+    real(dp):: en
 
     open(60,filename)
     read(60, *) numcols
@@ -372,6 +374,16 @@ contains
     IERR = 0
     rewind(60)
 
+    !Read in scale factor for multiplying cross sections (2nd column)
+    allocate(scalefact(lines))
+    read(60,*) 
+    read(60,*) 
+    do ii = 1, lines
+       read(60,*) en, scalefact(ii)
+    end do
+
+    rewind(60)
+
     call new_totalcsbasis(tcsbasis,lines,tcstype)
     do ii = 1, lines
        call new_totalcs(tcsbasis%b(ii), numcols, tcstype)
@@ -380,6 +392,7 @@ contains
     read(60,*)
     do ii = 1, lines
        read(60,*) tcsbasis%b(ii)%energy, (tcsbasis%b(ii)%cs(jj), jj=1, numcols)
+       tcsbasis%b(ii)%cs(:) = tcsbasis%b(ii)%cs(:)*scalefact(:) 
     end do
 
     close(60)

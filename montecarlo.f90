@@ -341,6 +341,14 @@ contains
         end if
         call getIndist(bmode,indist) 	
 
+        if (statebasis%b(stateNum)%psFormation .and. data_in%psmode) then
+           !Set energy to zero, to finish this simulation
+           particlebasis(partNum)%energy(coll+1) = 0.0_dp 
+           datasim%psFormed = .true.
+
+           return
+        end if
+
       	!print*, 'particle',partNum,'gen',particlebasis(partNum)%gen,'coll',coll
       	!print*, 'enex',enex
       	!print*, 'preCollEnergy',particlebasis(partNum)%energy(coll)

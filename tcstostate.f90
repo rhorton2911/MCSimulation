@@ -219,6 +219,7 @@ subroutine populatestates(statebasis,tcsbasis)
      call addState(statebasis,psFormation)
 
      DUPLICATE DEGENERATE ELECTRONIC STATES
+     REORDER NEW INPUT TO HAVE SAME STATE ORDER AS States_list
   end if
  
 

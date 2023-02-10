@@ -1,0 +1,3 @@
+totalcs.f90: readPsCs, readPsFormCs
+tcstostate.f90: modified populatestates 
+inputdata.f90: add posmode variable

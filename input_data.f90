@@ -129,6 +129,10 @@ contains
       read(nfile,*) self%trackSecEl
       if(iwrite .eq. 1) write(*,*) 'trackSecE: ', self%trackSecEl
 
+      if (self%posmode .eq. 1) then
+         self%trackSecEl = 0
+      end if
+
       read(nfile,*) self%numStatesIn
       if(iwrite .eq. 1) write(*,*) 'numStatesIn: ', self%numStatesIn
 				
