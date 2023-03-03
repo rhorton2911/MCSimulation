@@ -38,7 +38,12 @@ subroutine populatestates(statebasis,tcsbasis)
 
   ! read States_list
   
-  filename = TRIM(data_in%DATApath)//'/'//'States_list'
+  if (data_in%posmode .eq. 1) then
+    filename = '../pos-H2_DCS/states.core_parts'
+  else
+    filename = TRIM(data_in%DATApath)//'/'//'States_list'
+  end if
+  
   inquire(file=filename,exist=ex)
   if (ex) then
      print*, 'States_list found: intialize states'
@@ -59,6 +64,11 @@ subroutine populatestates(statebasis,tcsbasis)
      end if
      call init_state(statebasis%b(i),stlabel,eneV,enex,l,M,ipar,S,ion)
   enddo
+
+  if (data_in%posmode .eq. 1) then
+     !Read in scaling factor
+      
+  end if
 
 
   close(25)
@@ -215,11 +225,15 @@ subroutine populatestates(statebasis,tcsbasis)
         endif
      enddo
   else
-     call readPsFormCs(psFormation)
-     call addState(statebasis,psFormation)
+     !Read in scaling factor
 
-     DUPLICATE DEGENERATE ELECTRONIC STATES
-     REORDER NEW INPUT TO HAVE SAME STATE ORDER AS States_list
+
+
+
+
+     call readPsFormCs(psFormation,"../data-2/unscaled.txt")
+     call addState(psFormation, statebasis)
+    
   end if
  
 

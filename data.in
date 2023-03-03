@@ -569,7 +569,7 @@ MCCC-el-H2_DISS_frac.Bp1Su.txt
 MCCC-el-H2_DISS_frac.D1Pu.txt  
 MCCC-el-H2_DISS_frac.GK1Sg.txt  
 MCCC-el-H2_DISS_frac.I1Pg.txt
-66
+68
 totalcs_1.50000E+00
 totalcs_2.00000E+00
 totalcs_2.50000E+00
@@ -636,3 +636,6 @@ totalcs_3.50000E+02
 totalcs_4.00000E+02
 totalcs_4.50000E+02
 totalcs_5.00000E+02
+totalcs_6.25000E+02
+totalcs_7.50000E+02
+

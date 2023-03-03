@@ -298,6 +298,17 @@ contains
     self%DATApathVcsPseudo= TRIM(self%DATApath)
     self%DATApath = TRIM(tempDataPath) 
 
+    !Read in postron scattering tcs
+    if (data_in%posmode .eq. 1) then
+      tempDataPath = self%DATApath
+      self%DATApath = TRIM(self%DATApath)//'/'//'1013-state'
+      read(nfile,*) self%Ntcs
+      if(iwrite .eq. 1) write(*,*) 'Ntcs: positron scattering ', self%Ntcs
+      ! create array for totalcs file names    
+      call read_files_block(self,nfile,iwrite,self%Ntcs,self%filename_tcs)
+      self%DATApath = TRIM(tempDataPath) 
+    endif
+
     close(nfile)
 
     print*,'finish reading data_in'

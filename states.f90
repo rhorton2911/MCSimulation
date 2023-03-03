@@ -366,7 +366,7 @@ contains
         call copy_state(statebasis%b(ii), temp(ii))
         call destruct_state(temp(ii))
      end do
-     call copy(statebasis%b(numStates+1), self)
+     call copy_state(statebasis%b(numStates+1), self)
      deallocate(temp)
 
   end subroutine addState

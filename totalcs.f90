@@ -358,12 +358,13 @@ contains
     type(basis_totalcs), intent(inout):: tcsbasis
     integer, intent(in):: tcstype
     character(len=40), intent(in):: filename
-    integer:: ii, lines=0, IERR=0, numcols
+    integer:: ii, lines=0, IERR=0, numcols, jj
     character(len=50) :: a
     real(dp), dimension(:), allocatable:: scalefact
     real(dp):: en
-
-    open(60,filename)
+    
+    
+    open(60,file=filename)
     read(60, *) numcols
     read(60, *)
     do while (IERR == 0)
@@ -391,7 +392,7 @@ contains
 
     read(60,*)
     do ii = 1, lines
-       read(60,*) tcsbasis%b(ii)%energy, (tcsbasis%b(ii)%cs(jj), jj=1, numcols)
+       read(60,*) tcsbasis%b(ii)%en_incident, (tcsbasis%b(ii)%cs(jj), jj=1, numcols)
        tcsbasis%b(ii)%cs(:) = tcsbasis%b(ii)%cs(:)*scalefact(:) 
     end do
 
@@ -406,13 +407,15 @@ contains
   !         the input state type
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine readPsFormCs(self,filename)
+    use state_class
     implicit none
     type(state):: self
-    character(len=40), intent(in):: filename
+    character(len=100), intent(in):: filename
     integer:: ii, lines=0, IERR=0, numcols
+    real(dp) :: eneV, enex
     character(len=50) :: a
 
-    open(60,filename)
+    open(60,file=trim(filename))
     read(60, *) 
     read(60, *) 
     read(60, *)
@@ -423,24 +426,68 @@ contains
     lines = lines - 1
     IERR = 0
     rewind(60)
+    allocate(self%ein(lines), self%cs(lines))
 
     eneV = -1.0_dp
     enex = -1.0_dp
 
-    call init_state(self,"PsFormation",eneV,enex,-1,-1,-1,-1,1)
+    call init_state(self,"PsFormation",eneV,enex,-1,-1,-1,1.0d0,.false.)
     self%psFormation = .true.
     
     do ii = 1, lines
-       read(60,*) self%en(ii), self%cs(ii)
+       read(60,*) self%ein(ii), self%cs(ii)
     end do
     
     close(60)
 
    end subroutine readPsFormCs
 
-
-
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  ! Subroutine: scaleCs
+  ! Purpose: includes scaling factor to scale down 1013-
+  !           state ionisation to 2-center direct ionisation 
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  subroutine scaleCs(self, filename)
+   implicit none
+   type(basis_totalcs) :: self 
+   character(len=100), intent(in):: filename
+   integer :: ii, lines=0, IERR=0
+   real*8, dimension(:), allocatable :: energy, scalefactor, tcsenergy, intpscale
+   character(len=50) :: a
+   open(70,file=trim(filename))
+   read(70, *)
+   read(70, *)
+   read(70, *)
+   do while (IERR == 0)
+     read(70, *, iostat=IERR) a
+     lines = lines + 1
+   end do
+   lines = lines - 1
+   IERR = 0
+   rewind(70)
+   allocate(energy(lines), scalefactor(lines))
+   do ii = 1, lines
+       read(70,*) energy(ii), scalefactor(ii)
+   end do
   
+   allocate(tcsenergy(self%n), intpscale(self%n))
+   tcsenergy(:) = self%b(:)%en_incident
+   
+   call INTRPL(lines, energy, scalefactor, self%n, tcsenergy, intpscale)
+   do ii = 1, self%n
+    if (tcsenergy(ii) .gt. energy(lines)) then
+      intpscale(ii) = 1.0
+    endif
+   end do
+
+   do ii = 1, self%n
+      self%b(ii)%cs(:) = self%b(ii)%cs(:)*intpscale(ii)
+   end do
+
+   close(70)
+   deallocate(energy,scalefactor,tcsenergy,intpscale)
+  
+  end subroutine scaleCs
  !
   subroutine new_totalcs(self,Nmax,tcstype)
     implicit none

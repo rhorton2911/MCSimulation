@@ -341,7 +341,7 @@ contains
         end if
         call getIndist(bmode,indist) 	
 
-        if (statebasis%b(stateNum)%psFormation .and. data_in%psmode) then
+        if (statebasis%b(stateNum)%psFormation .and. (data_in%posmode .eq. 1)) then
            !Set energy to zero, to finish this simulation
            particlebasis(partNum)%energy(coll+1) = 0.0_dp 
            datasim%psFormed = .true.
@@ -1181,6 +1181,7 @@ contains
            write(70,*) 'average X1Sg(v=1) excitations:', aveGroundv1
            write(70,*) 'average X1Sg(v=2) excitations:', aveGroundv2
            write(70,*) 'average ratio of X1Sg(v=2) to (v=1) excitations', aveGroundRatio	
+      	   write(70,*) 'number of positronium formation occurences: ', datamc%numPsFormed
 
 	         do i=1,maxgen
            	      aveEperGen(i) = float(datamc%ePerGen(i)) / float(totalSims)
