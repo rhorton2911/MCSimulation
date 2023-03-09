@@ -48,9 +48,13 @@ subroutine mcsimulation(data_input,statebasis,sdcsBasis,eldcs,dicsBasis,VarPs,da
     !---------------- Monte Carlo Simulation ------------------------------------------------------------------
     print*, 'commencing mcsimulation', data_input%energyeV
     totalSims = int(real(data_input%totalSims)/real(data_input%totalVariations))
+    print *, 'totalSims done'
     en_incident = data_input%energyeV
+    print *, 'incident energy set'
     bmode = data_input%benchmark
+    print*, 'bmode before call'
     call init_simdata(datamc) 
+    print *, 'simdata datamc initiated'
     maxgen = 0 
     !ionop = 'mean' ! uses the mean excitation energy to calculate energy loss of incident particle and energy of ejected electron
     ionop = 'positive ionisation energy' 
@@ -64,7 +68,10 @@ subroutine mcsimulation(data_input,statebasis,sdcsBasis,eldcs,dicsBasis,VarPs,da
 
     call system_clock(t1, clockRate)
 
-    !$OMP PARALLEL DO private(particleBasis,diss,datasim,partNum,coll) 
+    print *, 'simulation starting'
+    
+    print *, totalSims
+    !!$OMP PARALLEL DO private(particleBasis,diss,datasim,partNum,coll)
     do simIndex = 1, totalSims
        ! initialise all energy values in the simulation to 0 so that the previous simulation is forgotten
        !call clearparticlebasis(particlebasis)		
@@ -74,7 +81,9 @@ subroutine mcsimulation(data_input,statebasis,sdcsBasis,eldcs,dicsBasis,VarPs,da
 	
        !----------- Simulation starting at initial particle -------------------------------------
        partNum = 0 
+       print *, 'datasim init'
        call init_simdata(datasim)
+       print *, 'particle init'
        call init_particle(particlebasis(0),en_incident,0,0.0_dp,0.0_dp,0.0_dp,0.0_dp)	
 	
        !print*, '---------------------------------------'
@@ -138,7 +147,7 @@ subroutine mcsimulation(data_input,statebasis,sdcsBasis,eldcs,dicsBasis,VarPs,da
        !Make arrays in particle type allocatable, then deallocate and end of simulation, reallocate as needed during the simulation.
        !deallocate(particlebasis)
     end do
-    !$OMP END PARALLEL DO
+    !!$OMP END PARALLEL DO
 
     close(60) ! Close particletrace.txt
 

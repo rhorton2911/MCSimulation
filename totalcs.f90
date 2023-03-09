@@ -410,12 +410,12 @@ contains
     use state_class
     implicit none
     type(state):: self
-    character(len=100), intent(in):: filename
+    character(len=25), intent(in):: filename
     integer:: ii, lines=0, IERR=0, numcols
     real(dp) :: eneV, enex
     character(len=50) :: a
 
-    open(60,file=trim(filename))
+    open(60,file=filename)
     read(60, *) 
     read(60, *) 
     read(60, *)
@@ -433,7 +433,8 @@ contains
 
     call init_state(self,"PsFormation",eneV,enex,-1,-1,-1,1.0d0,.false.)
     self%psFormation = .true.
-    
+   
+    read(60,*)
     do ii = 1, lines
        read(60,*) self%ein(ii), self%cs(ii)
     end do

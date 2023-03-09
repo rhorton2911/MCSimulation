@@ -145,6 +145,7 @@ program main
 
      ! Read all totalcs files	 
      call new_totalcsbasis(tcsbasis,data_in%Ntcs,data_in%tcstype)
+     print *, data_in%Ntcs
      do n=1,data_in%Ntcs
         filename = TRIM(data_in%filename_tcs(n))
         print*,'filename=', filename
@@ -155,10 +156,13 @@ program main
 
      !Set-up the states data structure - from the totalcs file with the largest energy
      Nmaxall = tcsbasis%b(data_in%Ntcs)%Nmax
+     if (data_in%posmode .eq. 1) then
+        Nmaxall = 1013
+     endif
      call new_basis(statebasis,Nmaxall,data_in%tcstype)
      ! define states
      call populatestates(statebasis,tcsbasis)
-     if (data_in%vcsOp .eq. 1) then
+     if ((data_in%vcsOp .eq. 1) .and. (data_in%posmode .eq. 0)) then
         !Read in vcs for elastic and excitation collisions
         call populateStatesVcs(statebasis,tcsbasis)
         call readVcsPseudo(statebasis)
@@ -215,38 +219,40 @@ program main
         print*,  '-->> enfine() =', n, enfine(n)
      enddo
 
-     call  intp_cs(statebasis,Nenfine,enfine)
-     call make_elastic_dcs(eldcs,size(statebasis%b(1)%ein),statebasis%b(1)%ein)
-     
-     !Fills an array of dcs type in the basis_dcs defined over a fine
-     !energy grid. Also finds average scattering angle.
-     call fillDcsBasis(eldcs)
+     if (data_in%posmode .eq. 0) then
+        call  intp_cs(statebasis,Nenfine,enfine)
+        call make_elastic_dcs(eldcs,size(statebasis%b(1)%ein),statebasis%b(1)%ein)
+        
+        !Fills an array of dcs type in the basis_dcs defined over a fine
+        !energy grid. Also finds average scattering angle.
+        call fillDcsBasis(eldcs)
 
-     !Reads in inelastic differential cross sections.
-     call make_inelastic_dcs(eldcs,statebasis)
+        !Reads in inelastic differential cross sections.
+        call make_inelastic_dcs(eldcs,statebasis)
 
-     !Reads in dissociative ionisation cross sections
-     call readDics("../data-1/DissIonTotal.csv", dicsBasis)
+        !Reads in dissociative ionisation cross sections
+        call readDics("../data-2/DissIonTotal.csv", dicsBasis)
 
-     !Creates a set of dissociation fractions for dissociative
-     !ionisation defined over a fine energy grid. 
-     call fillDicsBasis(statebasis ,dicsBasis, Nenfine, enfine)
+        !Creates a set of dissociation fractions for dissociative
+        !ionisation defined over a fine energy grid. 
+        call fillDicsBasis(statebasis ,dicsBasis, Nenfine, enfine)
 
-     !Reads in single differential cross section (SDCS) data.
-     call readSdcs(data_in,sdcsBasis)
+        !Reads in single differential cross section (SDCS) data.
+        call readSdcs(data_in,sdcsBasis)
 
-     !Interpolates SDCS to two dimensional energy grid    
-     call intpSdcsModFine(data_in,sdcsBasis,Nenfine,enfine)
+        !Interpolates SDCS to two dimensional energy grid    
+        call intpSdcsModFine(data_in,sdcsBasis,Nenfine,enfine)
 
-     if (data_in%sdcsScaleOp .eq. 1) then
-        call scaleSdcs(sdcsBasis,stateBasis)
+        if (data_in%sdcsScaleOp .eq. 1) then
+           call scaleSdcs(sdcsBasis,stateBasis)
+        end if
+        if (data_in%distortSdcsOp .eq. 1) then
+           call distortSdcs(sdcsBasis,stateBasis)
+        end if
+
+        !Construct analytical SDCS distribution
+        call constructSDCSDist(sdcsBasis)
      end if
-     if (data_in%distortSdcsOp .eq. 1) then
-        call distortSdcs(sdcsBasis,stateBasis)
-     end if
-
-     !Construct analytical SDCS distribution
-     call constructSDCSDist(sdcsBasis)
 
      print*
      print*, 'Finished data proccessing'
@@ -326,6 +332,7 @@ program main
 
     !----------------------------  Run MonteCarlo Simulation ----------------
     !Each variation is run data_in%totalSims/data_in%totalVariations times.
+    print*, "MC"
      call mcsimulation(data_in,statebasis,sdcsBasis,eldcs,dicsBasis,VarPs,datamcArray(ii),min_ein)
     !----------------------------  END MonteCarlo Simulation ----------------
 

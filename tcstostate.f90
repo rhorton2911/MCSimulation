@@ -18,10 +18,10 @@ subroutine populatestates(statebasis,tcsbasis)
   integer:: i
   integer:: N, M,ipar
   logical:: ion
-  real(dp):: S, twoelen, enex, en, eneV, threshold
+  real(dp):: S, twoelen, enex, en, eneV, threshold, ground
   integer:: inum
   real(dp), dimension(tcsbasis%n):: ar_ein,ar_cs
-  integer:: Nmax, l, j, idf, iac, inext
+  integer:: Nmax, l, j, idf, iac, inext, io
   character(len=10):: stlabel
   real(dp), dimension(Nlarge):: vdf,eindf
   character(len=10):: filenamest
@@ -33,8 +33,6 @@ subroutine populatestates(statebasis,tcsbasis)
 
   inum = tcsbasis%n
 !  print*, 'inum = ', inum
-  
-  Nmaxall = tcsbasis%b(inum)%Nmax   ! get it from the totalcs file with the largest energy
 
   ! read States_list
   
@@ -53,16 +51,44 @@ subroutine populatestates(statebasis,tcsbasis)
   endif
   open(25,file=filename,action='read')
 
+  Nmaxall = tcsbasis%b(inum)%Nmax   ! get it from the totalcs file with the largest energy
+  if (data_in%posmode .eq. 1) then
+    Nmaxall = 0
+    do 
+      read(25, *, iostat=io)
+      if (io/=0) exit
+      Nmaxall = Nmaxall + 1
+    end do
+    rewind(25)
+    Nmaxall = Nmaxall - 1
+  end if
+  
+
   print*, 'Nmaxall = ', Nmaxall
   read(25,*)
+  ground = 0.0
   do i=1, Nmaxall 
-     read(25,*) N, M,ipar,S, stlabel,twoelen, enex, en, eneV
+     if (data_in%posmode .eq. 1) then
+       read(25, *) N, ipar, M, S, twoelen, stlabel
+       print *, stlabel
+      if (i .eq. 1) then 
+        ground = twoelen
+      endif
+       enex = (twoelen - ground)*13.6*2
+       eneV = enex - 15.96632
+       en = eneV/(2*13.6)
+     else
+      read(25,*) N, M,ipar,S, stlabel,twoelen, enex, en, eneV
+     end if
      l = -1
      ion = .false.
      if (eneV .gt. 0.0d0) then
         ion = .true.
      end if
-     call init_state(statebasis%b(i),stlabel,eneV,enex,l,M,ipar,S,ion)
+     ! print *, size(statebasis%b)
+     print *, 'calling init state'
+     call init_state(statebasis%b(i), trim(stlabel),eneV,enex,l,M,ipar,S,ion)
+     print *, 'finished init state'
   enddo
 
   if (data_in%posmode .eq. 1) then
@@ -112,7 +138,13 @@ subroutine populatestates(statebasis,tcsbasis)
      do n=1,Nmaxall
 !        print*, TRIM(data_in%filename_df(i))
         j = LEN(TRIM(data_in%DATApath))+ 1
-        if(statebasis%b(n)%stlabel .eq. data_in%filename_df(i)(j+4:j+10)) then 
+        print *, statebasis%b(n)%stlabel, ' COMPARE WITH ', data_in%filename_df(i)(j+4:j+10)
+        print *, data_in%filename_df(i)
+        print*, LEN(trim(adjustl(statebasis%b(n)%stlabel))), LEN(trim(adjustl(data_in%filename_df(i)(j+4:j+10))))
+        if(trim(adjustl(statebasis%b(n)%stlabel(1:4))) .eq. trim(adjustl(data_in%filename_df(i)(j+4:j+10)))) then 
+           print*,'found for diss.fractions:', n,statebasis%b(n)%stlabel  
+           exit
+        else if(trim(adjustl(statebasis%b(n)%stlabel(1:5))) .eq. trim(adjustl(data_in%filename_df(i)(j+4:j+10)))) then   
            print*,'found for diss.fractions:', n,statebasis%b(n)%stlabel  
            exit
         endif
@@ -231,7 +263,7 @@ subroutine populatestates(statebasis,tcsbasis)
 
 
 
-     call readPsFormCs(psFormation,"../data-2/unscaled.txt")
+     call readPsFormCs(psFormation,"../data-2/unscaled_cs.txt")
      call addState(psFormation, statebasis)
     
   end if

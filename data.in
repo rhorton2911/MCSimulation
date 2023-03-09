@@ -1,7 +1,7 @@
 default ! 'PsBenchmarkTest' or 'default'
 H2
 500.0   ! Incident particle energy (eV)
-100000   ! Number of simulations
+10   ! Number of simulations
 0   !Debug Option (0=Production Mode, 1= Run tests)
 1   !Positron mode (0=normal electron sim, 1=postron incident particle)
 1   !Secondary electron tracking option (0=don't track, 1 = track) (Use 1 for full simulation)
@@ -28,7 +28,7 @@ state_distribution ! Ionisation Treatment ('mean', 'state_distribution', 'SDCS',
 0 !ionisation CS scaling option (1=scale , 0=do nothing)                   !!Used for error propagation
 1  ! Number of data types
 1  !Type of the data at the PATH below (1=H2 cross sections) 
-../data-1
+../data-2
 ALLDCS     !Location of inelastic dcs files in DATA_1
 MCCC-el-H2-X1Sg-vi=0-excitation           !Location of vcs files in DATA_1
 MCCC-el-H2-X1Sg-DISS_frac                 !Location of vibrational dissociation fractions in DATA_1
@@ -569,7 +569,7 @@ MCCC-el-H2_DISS_frac.Bp1Su.txt
 MCCC-el-H2_DISS_frac.D1Pu.txt  
 MCCC-el-H2_DISS_frac.GK1Sg.txt  
 MCCC-el-H2_DISS_frac.I1Pg.txt
-68
+66
 totalcs_1.50000E+00
 totalcs_2.00000E+00
 totalcs_2.50000E+00
@@ -636,6 +636,43 @@ totalcs_3.50000E+02
 totalcs_4.00000E+02
 totalcs_4.50000E+02
 totalcs_5.00000E+02
+39 ! pos-H2 cs
+totalcs_1.00000E+00
+totalcs_1.00000E+01
+totalcs_1.00000E-01
+totalcs_1.00000E+02
+totalcs_1.00000E-02
+totalcs_1.00000E+03
+totalcs_1.00000E-03
+totalcs_1.00000E-04
+totalcs_1.25000E+00
+totalcs_1.30000E+02
+totalcs_1.50000E+00
+totalcs_1.60000E+02
+totalcs_1.70000E+01
+totalcs_1.75000E+00
+totalcs_1.80000E+01
+totalcs_2.00000E+00
+totalcs_2.00000E+01
+totalcs_2.00000E+02
+totalcs_2.25000E+01
+totalcs_2.50000E+00
+totalcs_2.50000E+01
+totalcs_2.50000E+02
+totalcs_3.00000E+00
+totalcs_3.00000E+01
+totalcs_3.00000E+02
+totalcs_4.00000E+01
+totalcs_4.00000E+02
+totalcs_5.00000E+00
+totalcs_5.00000E-01
+totalcs_5.00000E+02
+totalcs_5.50000E-01
+totalcs_6.00000E+01
+totalcs_6.00000E-01
 totalcs_6.25000E+02
+totalcs_7.00000E+00
+totalcs_7.50000E-01
 totalcs_7.50000E+02
-
+totalcs_8.00000E+01
+totalcs_9.00000E+00

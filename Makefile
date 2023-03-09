@@ -38,7 +38,7 @@ e = intp.o numbers.o input_data.o states.o elasticdcs.o totalcs.o tcstostate.o s
 
 ##------------------------------------------- gfortran compiler setup -------------------------------##
 ###DEBUGGING FLAGS###
-#a = -Wall -Wextra -pedantic -Warray-bounds -fbacktrace -fopenmp -frecursive -g -Og \
+dbg = -Wall -Wextra -pedantic -Warray-bounds -fbacktrace -fopenmp -frecursive -g -Og \
     -fimplicit-none -fcheck=all -ffree-line-length-none -fdefault-integer-8 -m64 -Wno-tabs
 
 #fclink = -fdefault-integer-8 -m64 
@@ -46,7 +46,7 @@ e = intp.o numbers.o input_data.o states.o elasticdcs.o totalcs.o tcstostate.o s
 ###Production Flags - Enable Optimisations###
 b = -ffree-line-length-none -fopenmp -fdefault-integer-8 -m64 -O3
 LAPACKLIB= -lmkl_gf_lp64 -lmkl_core -lmkl_gnu_thread -lgomp -lm
-a=$(b) $(LAPACKLIB)
+a=$(b) $(LAPACKLIB) $(dbg)
 ##---------------------------------------------------------------------------------------------------##
  
 #ftn is a fortran compiler wrapper provided by Pawsey. Compiler used is selected based on the current programming environment.
