@@ -5,7 +5,8 @@ module mc
 	
     type, public:: particle
         real(dp),dimension(0:30000):: energy ! The energy at each collision
-      	real(dp),dimension(0:30000):: enArr ! The energy target energy at each collision
+        real(dp),dimension(0:30000):: energySampled !energy of the electron sampled somewhere along the path, for <E> calculation
+        real(dp),dimension(0:30000):: enArr ! The energy target energy at each collision
       	integer:: gen ! Which generation the particle was created in
       	integer:: colls ! Total number of collisions the particle undergoes
       	integer,dimension(0:30000):: state ! The state selected at each collision
@@ -1506,10 +1507,11 @@ contains
         !Get total cross section at given energy.
         if(ScatteringModel .eq. 1) then !Use MCCC data
                 call get_csatein(stateBasis,eIncident,tcs)
+                sigma = SUM(tcs%cs)*(data_in%bohrRadius**2) !Convert to SI
         else if(ScatteringModel .eq. 2) then !Use Reid Ramp model
                 call ReidRampTCS(stateBasis,eIncident,tcs)
+                sigma = SUM(tcs%cs)*1E-20 !Conversion factor for Amstrong to SI area
         end if
-        sigma = SUM(tcs%cs)*(data_in%bohrRadius**2)  !Convert to SI
         !Draw path length from exponential distribution
         if(data_in%radop .eq. 1) then
            call RANDOM_NUMBER(randVal)

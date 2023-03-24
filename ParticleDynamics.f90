@@ -28,8 +28,8 @@ subroutine E_Field(particleIn,rad,costheta,phi,coll,datasim,Elec,energy,statebas
 	    type(basis_state),intent(in):: statebasis
         type(simdata)::datasim
         type(particle),intent(inout)::particleIn
-		real(dp)::energy, energyJ, energyInit, energyJInit
-        real(dp)::rad, path, costheta, phi, theta, randNum
+		real(dp)::energy, energyJ, energyInit, energyJInit, energyOut
+        real(dp)::rad, path, costheta, phi, theta, randNum, energySampled
         real(dp)::xVal,yVal,zVal
 		real(dp)::velx, vely, velz
 		real(dp)::time, mass, charge, magVel
@@ -42,11 +42,6 @@ subroutine E_Field(particleIn,rad,costheta,phi,coll,datasim,Elec,energy,statebas
 
 		!Figure out values that will be needed for calculation, acceleration in each direction due to E field, initial velocities
 		theta = ACOS(costheta) 
-        !Select positive or negative sign flip for theta 
-        call RANDOM_NUMBER(randNum)
-        if(randNum .lt. 0.5) then 
-                theta = -theta
-        end if
 
 		!Accelerations in x, y, z directions (lab frame)
 		mass = 9.10938356E-31 !mass of an electron in kg
@@ -54,6 +49,7 @@ subroutine E_Field(particleIn,rad,costheta,phi,coll,datasim,Elec,energy,statebas
 		energyJ = energy * 1.60218E-19
                 energyInit = energy
                 energyJInit = energyJ
+           
 		Acceleration(1) = -(Elec(1)*charge)/mass
 		Acceleration(2) = -(Elec(2)*charge)/mass
 		Acceleration(3) = -(Elec(3)*charge)/mass
@@ -71,19 +67,24 @@ subroutine E_Field(particleIn,rad,costheta,phi,coll,datasim,Elec,energy,statebas
 		magVel = sqrt((2.0*energyJ)/mass)
 		!print*,'Magnitude of velocity at collision ', coll, 'is: ', magVel
 		
-		Velocity(1) = magVel * costheta*sin(phi)
-		Velocity(2) = magVel * sin(theta)*sin(phi)
-		Velocity(3) = magVel * cos(phi)
+		Velocity(1) = magVel * cos(phi)*sin(theta)
+		Velocity(2) = magVel * sin(phi)*sin(theta)
+		Velocity(3) = magVel * costheta
 		particleIn%abs_vel(coll) = magVel
 
                 !PathConvergence uses the mean free path to find convergent tcs, energy
-                call PathConvergence(rad,time,datasim,statebasis,Velocity,Acceleration,tcs,ScatteringModel)
-
-        
-                !Now sample path at correct energy
-                call selectPath(path,statebasis,energy,ScatteringModel)
+                if(mod(coll, 10) .eq. 0) then
+                !print*, 'Made it to coll: ', coll  
+                end if
+                call PathConvergence(rad,time,datasim,statebasis,Velocity,Acceleration,tcs,ScatteringModel,energyOut,energyJ, coll)
+                if(mod(coll, 10) .eq. 0) then
+                !print*, 'rad calculated by PathConvergence is: ', rad    
+                end if    
+                !Accurate path now generated in PathConvergence, selectPath merely used as first guess
+                !call selectPath(path,statebasis,energyOut,ScatteringModel)
 		!Calculate new time taken, which will be the time returned to the simulation
-		call timeTaken(path, Velocity, Acceleration, time)
+		call timeTaken(rad, Velocity, Acceleration, time)
+
 		!print *, 'Time taken for collision ', coll, 'is: ', time
 		!Update position, position from origin, energy, for new collision
 		velx = Velocity(1) + Acceleration(1)*time
@@ -92,8 +93,11 @@ subroutine E_Field(particleIn,rad,costheta,phi,coll,datasim,Elec,energy,statebas
 		
 		magVel = sqrt(velx*velx + vely*vely + velz*velz)
 		
-		energyJ = 0.5*mass*magVel*magVel      
-
+		energyJ = 0.5*mass*magVel*magVel 
+                !Need two energies, one which measures average energy and one which updates to simulation     
+                call EnergySampling(particleIn, coll, Velocity, Acceleration, time, energySampled, mass) !Sample a random point along the path to take energy from, for calculation of average energy
+                particleIn%energySampled(coll) = energySampled
+  
         !Construct rotation matrix from theta, phi using analytic formulae
 		!Unnecessary in E_Field, rotation elements included in velocity calculations
 		
@@ -133,8 +137,8 @@ subroutine E_Field(particleIn,rad,costheta,phi,coll,datasim,Elec,energy,statebas
 		
 		!Update particle energy - added to current coll value so update_energy functions properly
 		energy = energyJ * 6.242E+18
-                particleIn%energy(coll) = energy
-
+                particleIn%energy(coll+1) = energy
+                
         !Perform tcs 1 more time so that selectstate is given tcs at proper collision energy		 
         if(ScatteringModel .eq. 1) then !Use MCCC data
                 call get_csatein(statebasis,energy,tcs) ! Create totalcs for the current energy !call print_tcs(tcs) 
@@ -147,9 +151,9 @@ subroutine E_Field(particleIn,rad,costheta,phi,coll,datasim,Elec,energy,statebas
                 !Update velocities in particle structure
                 !Multiply by 0.5 again so that the velocity is halfway along the path (average)
 
-                particleIn%velx(coll) = Velocity(1) + 0.5 * Acceleration(1) * time * 0.5
-                particleIn%vely(coll) = Velocity(2) + 0.5 * Acceleration(2) * time * 0.5
-                particleIn%velz(coll) = Velocity(3) + 0.5 * Acceleration(3) * time * 0.5
+                particleIn%velx(coll) = (particleIn%x(coll+1) - particleIn%x(coll))/time
+                particleIn%vely(coll) = (particleIn%y(coll+1) - particleIn%y(coll))/time 
+                particleIn%velz(coll) = (particleIn%z(coll+1) - particleIn%z(coll))/time
 
 		particleIn%time(coll+1) = particleIn%time(coll) + time
 
@@ -195,9 +199,9 @@ subroutine timeTaken(path, Velocity, Acceleration, time)
 	!print*, 'Before do loop, path is: ', path
 	do while(integral .lt. path)
 		
-		deltax = abs(VelocityInt(1) * increment + Acceleration(1) * increment * increment)
-		deltay = abs(VelocityInt(2) * increment + Acceleration(2) * increment * increment)
-		deltaz = abs(VelocityInt(3) * increment + Acceleration(3) * increment * increment)
+		deltax = abs(VelocityInt(1) * increment + 0.5 * Acceleration(1) * increment * increment)
+		deltay = abs(VelocityInt(2) * increment + 0.5 * Acceleration(2) * increment * increment)
+		deltaz = abs(VelocityInt(3) * increment + 0.5 * Acceleration(3) * increment * increment)
 		
 		integral = integral + sqrt(deltax*deltax + deltay*deltay + deltaz*deltaz)
 		
@@ -243,7 +247,7 @@ subroutine DriftVelocityConvergence(W, ConvergenceFlag, particleIn, coll)
         !print*, 'At collision ', coll, 'difference in drifts is: ', Difference
 
 
-	if(Difference .lt. 0.25) then
+	if(Difference .lt. 0.50) then
 		ConvergenceFlag = 1
 	else
 		ConvergenceFlag = 0
@@ -253,7 +257,7 @@ subroutine DriftVelocityConvergence(W, ConvergenceFlag, particleIn, coll)
 
 end subroutine DriftVelocityConvergence
 
-subroutine PathConvergence(rad,time,datasim,statebasis,Velocity,Acceleration,tcs,ScatteringModel)
+subroutine PathConvergence(rad,time,datasim,statebasis,Velocity,Acceleration,tcs,ScatteringModel,energyOut,energyJ, coll)
 
 	use numbers
     use AnalyticScattering
@@ -266,72 +270,209 @@ subroutine PathConvergence(rad,time,datasim,statebasis,Velocity,Acceleration,tcs
     use dcs_module         ! deals with elastic DCS
 
 
-	real(dp), dimension(3)::Acceleration
+	real(dp), dimension(3)::Acceleration, VelocityInt
 	real(dp), dimension(3),intent(inout)::Velocity
 	type(basis_state),intent(in):: statebasis
 	type(totalcs),intent(inout):: tcs
     type(simdata),intent(in)::datasim
-	integer::ScatteringModel
-	real(dp)::energy, energyJ,sigma,lambda_new,lambda_old,diff, magVel, mass, velx, vely, velz
+	integer::ScatteringModel, testCounter, coll
+	real(dp)::energy,sigma,lambda_new,lambda_old,diff, magVel, mass, velx, vely, velz
+        real(dp),intent(out)::energyOut
 	real(dp),intent(out)::time
 	real(dp),intent(inout)::rad
+        real(dp)::energyJ, energyInit, energyFinal, E_grid, sigma_tot, counter, timeIncrement, randVal
 
-	!Generate total cross section as usual
-
+	mass = 9.10938356E-31 !mass of an electron in kg
+        
+        !Generate total cross section as usual
+        energy = energyJ * 6.242E+18
+        randVal = 0.0
+        !print*, 'energyJ is: ', energyJ
+        energyInit = energy
+        !print*, 'Velocity given to PathConvergence is: ', Velocity
 	if(ScatteringModel .eq. 1) then !Use MCCC data
 		call get_csatein(statebasis,energy,tcs) ! Create totalcs for the current energy !call print_tcs(tcs)
+                sigma = SUM(tcs%cs)*(data_in%bohrRadius**2)
 	else if(ScatteringModel .eq. 2) then !Use Reid Ramp model
 		call ReidRampTCS(statebasis,energy,tcs)
+                sigma = SUM(tcs%cs)*1.0E-20
 	end if
-    sigma = SUM(tcs%cs)*(data_in%bohrRadius**2)  !Convert to SI
-
+        !print*, 'sigma old is: ', sigma
+        !print*, 'sum of cross sections is: ', SUM(tcs%cs)
 	!Calculate mean free path for first guess
-	lambda_old = 1/(data_in%density*sigma)
+        lambda_old = 1/(data_in%density*sigma)
+        if(mod(coll, 10) .eq. 0) then
+           !print*, 'Initial guess for path is: ', lambda_old
+        end if
 
 	diff = 1.0
-
+        testCounter = 0
+        timeIncrement = 1.0E-11
 	!Run do loop to calculate convergent value of sigma and lambda
-	do while(diff.gt.0.01)
-
+	do while(diff.gt.0.001)
+                testCounter = testCounter + 1
+                if(testCounter .gt. 10) then
+                   print*, 'At collision: ', coll, 'testCounter is at: ', testCounter
+                end if
 		!At given guess for lambda, call timeTaken
 		call timeTaken(lambda_old, Velocity, Acceleration, time)
+                !print*, 'Time returned from timeTaken is: ', time
+                !print*, 'Velocity returned from timeTaken is: ', Velocity
 
-
-
-		!Next, establish average kinetic energy of initial and final positions
-		velx = Velocity(1) + Acceleration(1)*time
+                velx = Velocity(1) + Acceleration(1)*time
 		vely = Velocity(2) + Acceleration(2)*time
 		velz = Velocity(3) + Acceleration(3)*time
 
+                !print*, 'Velocity given to energyFinal is: ', velx, vely, velz
+
 		magVel = sqrt(velx*velx + vely*vely + velz*velz)
 
-		energyJ = (energyJ + 0.5*mass*magVel*magVel)/2.0
+                !print*, 'magVel is: ', magVel
 
-		energy = energyJ * 6.242E+18
-
+		energyJ = 0.5*mass*magVel*magVel
+		
+		energyFinal = energyJ * 6.242E+18
+		!print*, 'energyFinal is: ', energyFinal
 		!Take new cross section at energy halfway along the path
+                !print*, 'energyInit is: ', energyInit
+		sigma_tot = 0.0d0
+		counter = 0.0d0
+                
+                if(energyInit.le.energyFinal) then
+                E_grid = energyInit
+		do while(E_grid.le.energyFinal)
+		
+			if(ScatteringModel .eq. 1) then !Use MCCC data
+				call get_csatein(statebasis,E_grid,tcs) ! Create totalcs for the current energy !call print_tcs(tcs) 
+				sigma = SUM(tcs%cs)*(data_in%bohrRadius**2)  !Convert to SI
+			else if(ScatteringModel .eq. 2) then !Use Reid Ramp model
+				call ReidRampTCS(statebasis,E_grid,tcs)
+				sigma = SUM(tcs%cs)*1.0E-20
+			end if
+			sigma_tot = sigma_tot + sigma
+			counter = counter + 1.0d0
+			!Calculate next E_grid in terms of time step
+                        !VelocityInt(1) = VelocityInt(1) + Acceleration(1) * timeIncrement 
+                        !VelocityInt(2) = VelocityInt(2) + Acceleration(2) * timeIncrement
+                        !VelocityInt(3) = VelocityInt(3) + Acceleration(3) * timeIncrement
 
-		if(ScatteringModel .eq. 1) then !Use MCCC data
-			call get_csatein(statebasis,energy,tcs) ! Create totalcs for the current energy !call print_tcs(tcs)
-		else if(ScatteringModel .eq. 2) then !Use Reid Ramp model
-			call ReidRampTCS(statebasis,energy,tcs)
-		end if
+                        !magVel = sqrt(VelocityInt(1)**2 + VelocityInt(2)**2 + VelocityInt(3)**2)
+                        !E_grid = 0.5*mass*magVel*magVel
+                        
+                        !Calculate next E_grid in terms of E increment
+                        E_grid = E_grid + 0.0001
+		end do
+                end if 
+                
+                if(energyInit.gt.energyFinal) then
+                E_grid = energyFinal
+                 do while(E_grid.lt.energyInit)
 
+                        if(ScatteringModel .eq. 1) then !Use MCCC data
+                                call get_csatein(statebasis,E_grid,tcs) ! Create totalcs for the current energy !call print_tcs(tcs)
+                                sigma = SUM(tcs%cs)*(data_in%bohrRadius**2)  !Convert to SI
+                        else if(ScatteringModel .eq. 2) then !Use Reid Ramp model
+                                call ReidRampTCS(statebasis,E_grid,tcs)
+                                sigma = SUM(tcs%cs)*1.0E-20
+                        end if
+                        sigma_tot = sigma_tot + sigma
+                        counter = counter + 1.0d0
+                        
+                         !Calculate next E_grid in terms of time step
+                        !VelocityInt(1) = VelocityInt(1) + Acceleration(1) * timeIncrement
+                        !VelocityInt(2) = VelocityInt(2) + Acceleration(2) * timeIncrement
+                        !VelocityInt(3) = VelocityInt(3) + Acceleration(3) * timeIncrement
+
+                        !magVel = sqrt(VelocityInt(1)**2 + VelocityInt(2)**2 + VelocityInt(3)**2)
+                        !E_grid = 0.5*mass*magVel*magVel
+
+                        !Calculate E_grid in terms of E step
+                        E_grid = E_grid + 0.0001
+
+                end do
+                end if
+
+		
+		sigma = sigma_tot/counter
+                !sigma = sigma_tot
+                !print*, 'sigma new is: ', sigma
 		!Calculate new lambda based on new TCS
-
-		sigma = SUM(tcs%cs)*(data_in%bohrRadius**2)  !Convert to SI
 		lambda_new = 1/(data_in%density*sigma)
 
 		!Calculate relative difference in lambda's
-		diff = abs((lambda_new - lambda_old)/(lambda_new))
-
-		!Set old lambda for next iteration to be current new lambda
+                diff = abs((lambda_new - lambda_old)/(lambda_new))
+                if(testCounter .gt. 10) then
+                print*, 'lambda_old is: ', lambda_old
+                print*, 'lambda_new is: ', lambda_new
+                print*, 'Diff is: ', diff
+                end if
+                !Set old lambda for next iteration to be current new lambda
 		lambda_old = lambda_new
 	end do
+        
+        energyOut = energy
+        !print *, 'Number of lambda loops is: ', testCounter
 
-
-
+        !Accurate sigma now known, sample path length from this sigma (bypassing selectPath)
+        call RANDOM_NUMBER(randVal)
+           rad = (-1.0)*(1/(data_in%density*sigma))*log(randVal)
+           
+           if(randVal .gt. 0.99) then
+             ! print*, 'Test counter number for path convergence loops: ', testCounter
+           end if
 
 end subroutine PathConvergence
 
+subroutine EnergySampling(particleIn, coll, Velocity, Acceleration, time, energySampled, mass)
+use numbers
+    use AnalyticScattering
+    use state_class        ! defines states (and basis of them) with operations on them
+    use totalcs_module     !  reading totalcs files
+    use sdcs_module
+    use mc					! contains subroutines for monte carlo simulation
+    use input_data			! contains input such as incident energy, benchmark mode
+    use Ps_module
+    use dcs_module         ! deals with elastic DCS
+
+  
+    type(particle),intent(inout)::particleIn
+    integer::coll
+  real(dp), dimension(3)::Acceleration, Velocity, VelocitySampled
+  real(dp)::time, energySampled, mass
+  real(dp)::randNum, magVel, checkPoint, timeSample
+
+!We sample the energy of the particle at every time interval of 10^7 s
+
+
+  checkPoint = REAL(CEILING(particleIn%time(coll)*1.0E+7)) * 1.0E-7
+  if(mod(coll, 100) .eq. 0) then
+     !print*, 'checkPoint is: ', checkPoint, 'Time at end is: ', particleIn%time(coll) + time
+  end if
+  energySampled = 0.0d0
+
+  if(particleIn%time(coll) + time .gt. checkPoint) then
+     timeSample = checkPoint - particleIn%time(coll)
+
+     VelocitySampled(1) = Velocity(1) + Acceleration(1)*timeSample
+  VelocitySampled(2) = Velocity(2) + Acceleration(2)*timeSample
+  VelocitySampled(3) = Velocity(3) + Acceleration(3)*timeSample
+  magVel = sqrt(VelocitySampled(1)*VelocitySampled(1) + VelocitySampled(2)*VelocitySampled(2) + VelocitySampled(3)*VelocitySampled(3))
+
+     
+
+  !call RANDOM_NUMBER(randNum)
+  !VelocitySampled(1) = Velocity(1) + Acceleration(1)*time*randNum
+  !VelocitySampled(2) = Velocity(2) + Acceleration(2)*time*randNum
+  !VelocitySampled(3) = Velocity(3) + Acceleration(3)*time*randNum
+  !magVel = sqrt(VelocitySampled(1)*VelocitySampled(1) + VelocitySampled(2)*VelocitySampled(2) + VelocitySampled(3)*VelocitySampled(3))
+  energySampled = 0.5*mass*magVel*magVel
+  energySampled = energySampled * 6.242E+18 !Convert sampled energy to eV
+  end if
+
+  !IF THE ENERGY IS ZERO IT IS SKIPPED OVER IN FINAL CALCULATION OF MEAN ENERGY
+
+  
+
+end subroutine EnergySampling
+  
 end module ParticleDynamics

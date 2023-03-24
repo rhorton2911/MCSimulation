@@ -1,12 +1,12 @@
 default ! 'PsBenchmarkTest' or 'default'
 H2
 500.0   ! Incident particle energy (eV)
-10000   ! Number of simulations
+30  ! Number of simulations
 0   !Debug Option (0=Production Mode, 1= Run tests)
 1   !Number of variations of input parameters to run (1 for full MC with no uncertainty propagation)
 3 !Number of simulations to write to file for visualization.
 0 !Benchmark cross section option (0= don't use, 1=use Garvey and Green (1976) CS.
-3.0e+21 !Number density of the medium (1/m^3)
+1.0e+21 !Number density of the medium (1/m^3)
 3 !Scattering angle option. 1= Average. 2= Distribution. 3=Isotropic
 2 !Dissociative Ionisation DF option 1=CCC states, 2=DICS cross sections 
 1 !Inelastic scattering energy loss option (1=exc energy only, 2=recoil formula)
