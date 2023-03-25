@@ -1,0 +1,93 @@
+ -------------------------------- NEW SIMULATION ---------------------------
+ simIndex                    1
+ --------NEW PARTICLE--------
+ particle                    0 gen                    0
+ -------
+ coll                    0 state                  385
+ precollE   500.04037115506463      postE   476.69281347146585     
+ diss =  F
+ -------
+ coll                    1 state                  798
+ precollE   476.69281347146585      postE   398.87728216092012     
+ diss =  F
+ -------
+ coll                    2 state                  292
+ precollE   398.87728216092012      postE   378.58218432302789     
+ diss =  F
+ -------
+ coll                    3 state                   14
+ precollE   378.58218432302789      postE   363.91758108507804     
+ diss =  F
+ -------
+ coll                    4 state                   76
+ precollE   363.91758108507804      postE   347.58010998141907     
+ diss =  F
+ -------
+ coll                    5 state                    5
+ precollE   347.58010998141907      postE   334.65027187295806     
+ diss =  F
+ -------
+ coll                    6 state                  262
+ precollE   334.65027187295806      postE   315.14962397952928     
+ diss =  F
+ -------
+ coll                    7 state                  896
+ precollE   315.14962397952928      postE   194.21329255086621     
+ diss =  F
+ -------
+ coll                    8 state                    4
+ precollE   194.21329255086621      postE   181.27107125081480     
+ diss =  F
+ -------
+ coll                    9 state                   78
+ precollE   181.27107125081480      postE   164.74250100297127     
+ diss =  F
+ -------
+ coll                   10 state                    1
+ precollE   164.74250100297127      postE   0.0000000000000000     
+ diss =  F
+ --------NEW PARTICLE--------
+ particle                    1 gen                    1
+ -------
+ coll                    0 state                    0
+ precollE   7.4197238559608429      postE   0.0000000000000000     
+ diss =  F
+ --------NEW PARTICLE--------
+ particle                    2 gen                    1
+ -------
+ coll                    0 state                    0
+ precollE   61.881414983570096      postE   0.0000000000000000     
+ diss =  F
+ --------NEW PARTICLE--------
+ particle                    3 gen                    1
+ -------
+ coll                    0 state                    0
+ precollE   4.3593429701194744      postE   0.0000000000000000     
+ diss =  F
+ --------NEW PARTICLE--------
+ particle                    4 gen                    1
+ -------
+ coll                    0 state                    0
+ precollE  0.39921325904083105      postE   0.0000000000000000     
+ diss =  F
+ --------NEW PARTICLE--------
+ particle                    5 gen                    1
+ -------
+ coll                    0 state                    0
+ precollE   3.5597717476921069      postE   0.0000000000000000     
+ diss =  F
+ --------NEW PARTICLE--------
+ particle                    6 gen                    1
+ -------
+ coll                    0 state                    0
+ precollE   104.98569139261247      postE   0.0000000000000000     
+ diss =  F
+ --------NEW PARTICLE--------
+ particle                    7 gen                    1
+ -------
+ coll                    0 state                    0
+ precollE  0.57555086398696886      postE   0.0000000000000000     
+ diss =  F
+ ions                    7
+ elastic                    0
+ excite                    3

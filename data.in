@@ -1,10 +1,10 @@
 default ! 'PsBenchmarkTest' or 'default'
 H2
 500.0   ! Incident particle energy (eV)
-10   ! Number of simulations
+1000   ! Number of simulations
 0   !Debug Option (0=Production Mode, 1= Run tests)
 1   !Positron mode (0=normal electron sim, 1=postron incident particle)
-1   !Secondary electron tracking option (0=don't track, 1 = track) (Use 1 for full simulation)
+0   !Secondary electron tracking option (0=don't track, 1 = track) (Use 1 for full simulation)
 0   !Number of H2 electronic states to use, read from following line. (0=use all, full simulation)
 X1Sg b3Su ION-H2 a3Sg B1Su EF1Sg C1Pu c3Pu e3Su g3Sg d3Pu Bp1Su h3Sg K1Sg i3Pg Q1Pg j3Dg J1Dg GK1Sg D1Pu ION-H2  !('all'= full simulation, .e.g X1Sg b3Su ... = exclude all but these)
 1   !Number of variations of input parameters to run (1 for full MC with no uncertainty propagation)
@@ -19,7 +19,7 @@ state_distribution ! Ionisation Treatment ('mean', 'state_distribution', 'SDCS',
 0 !SDCS Fit Scaling option (0=leave alone, 1=scale fitted sdcs to reproduce TICS)
 0 !state_distribution ionisation option (0 = regular, 1=symmetrised)   !!!!This produced the TICS doubling bug!!!!
 0 !Sdcs distortion option (1=distort Sdcs for testing,0=leave alone)
-1 !vcs option (0=don't use, 1= use)
+0 !vcs option (0=don't use, 1= use)
 1 !record only ground vib excitation by primary electron (0=don't use, 1=use)
 1 !dissociation option (1=allow direct dissociative excitation, 0=switch off)
 1 !radop, path length option (1=exponential distribution,0=constant mean free path)
@@ -637,42 +637,42 @@ totalcs_4.00000E+02
 totalcs_4.50000E+02
 totalcs_5.00000E+02
 39 ! pos-H2 cs
-totalcs_1.00000E+00
-totalcs_1.00000E+01
-totalcs_1.00000E-01
-totalcs_1.00000E+02
-totalcs_1.00000E-02
-totalcs_1.00000E+03
-totalcs_1.00000E-03
 totalcs_1.00000E-04
-totalcs_1.25000E+00
-totalcs_1.30000E+02
-totalcs_1.50000E+00
-totalcs_1.60000E+02
-totalcs_1.70000E+01
-totalcs_1.75000E+00
-totalcs_1.80000E+01
-totalcs_2.00000E+00
-totalcs_2.00000E+01
-totalcs_2.00000E+02
-totalcs_2.25000E+01
-totalcs_2.50000E+00
-totalcs_2.50000E+01
-totalcs_2.50000E+02
-totalcs_3.00000E+00
-totalcs_3.00000E+01
-totalcs_3.00000E+02
-totalcs_4.00000E+01
-totalcs_4.00000E+02
-totalcs_5.00000E+00
+totalcs_1.00000E-03
+totalcs_1.00000E-02
+totalcs_1.00000E-01
 totalcs_5.00000E-01
-totalcs_5.00000E+02
 totalcs_5.50000E-01
-totalcs_6.00000E+01
 totalcs_6.00000E-01
-totalcs_6.25000E+02
-totalcs_7.00000E+00
 totalcs_7.50000E-01
-totalcs_7.50000E+02
-totalcs_8.00000E+01
+totalcs_1.00000E+00
+totalcs_1.25000E+00
+totalcs_1.50000E+00
+totalcs_1.75000E+00
+totalcs_2.00000E+00
+totalcs_2.50000E+00
+totalcs_3.00000E+00
+totalcs_5.00000E+00
+totalcs_7.00000E+00
 totalcs_9.00000E+00
+totalcs_1.00000E+01
+totalcs_1.70000E+01
+totalcs_1.80000E+01
+totalcs_2.00000E+01
+totalcs_2.25000E+01
+totalcs_2.50000E+01
+totalcs_3.00000E+01
+totalcs_4.00000E+01
+totalcs_6.00000E+01
+totalcs_8.00000E+01
+totalcs_1.00000E+02
+totalcs_1.30000E+02
+totalcs_1.60000E+02
+totalcs_2.00000E+02
+totalcs_2.50000E+02
+totalcs_3.00000E+02
+totalcs_4.00000E+02
+totalcs_5.00000E+02
+totalcs_6.25000E+02
+totalcs_7.50000E+02
+totalcs_1.00000E+03

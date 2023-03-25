@@ -42,7 +42,7 @@ contains
   subroutine init_state(self,stlabel,en,enex,l,m,ipar,spin,ion)
     implicit none
     type(state), intent(inout):: self
-    character(len=10), intent(in):: stlabel
+    character(len=*), intent(in):: stlabel
     real(dp), intent(in):: en,enex
     integer, intent(in):: l, m, ipar
     real(dp), intent(in):: spin
@@ -141,11 +141,12 @@ contains
     state_l%resolved = state_r%resolved
 
     i2 = state_r%inum
-
+    print*, state_l%stlabel !'state_r%inum is ', i2
     if ( associated(state_l%ein) ) deallocate(state_l%ein)
     if ( associated(state_l%cs) ) deallocate(state_l%cs)
     allocate( state_l%ein(1:i2) )
     allocate( state_l%cs(1:i2) )
+    print*, 'inum l', state_l%inum, 'ein l', size(state_l%ein), 'inum r', state_r%inum, 'ein r', size(state_r%ein)
     state_l%ein(1:i2) = state_r%ein(1:i2)
     state_l%cs(1:i2) = state_r%cs(1:i2)
 
@@ -352,13 +353,14 @@ contains
      integer:: ii, numStates, tcstype
      type(state), dimension(:), allocatable:: temp
 
-     allocate(temp(statebasis%n))
+     numStates = statebasis%n
+     ! print *, 'numStates of addState', numStates
+     allocate(temp(numStates))
      tcstype = statebasis%tcstype
 
-     do ii = 1, statebasis%n
+     do ii = 1, numStates
         call copy_state(temp(ii), statebasis%b(ii))
      end do
-     numStates = statebasis%n
 
      call destruct_basis(statebasis)
      call new_basis(statebasis,numStates+1,tcstype)
@@ -367,11 +369,12 @@ contains
         call destruct_state(temp(ii))
      end do
      call copy_state(statebasis%b(numStates+1), self)
+     !print*, statebasis%b(numStates+1)%inum, size(statebasis%b(numStates+1)%ein)
+     !stop
      deallocate(temp)
+     statebasis%n = numStates + 1
 
   end subroutine addState
-
-
 
 
   !
@@ -552,26 +555,32 @@ contains
 
     print*, 'Interpolate CS to a fine energy grid'
     Nmax = self%n
-
 !   find the maxium number of energies for the old energy grid 
     Nenmaxold = 0
     do n=1,Nmax
        Nenmaxold = max(Nenmaxold,self%b(n)%inum)
     enddo
-    print*,'Nenmaxold =', Nenmaxold 
+    print*,'Nenmaxold =', Nenmaxold
+    ! print *, size(self%b) 
     allocate(eold(Nenmaxold), csold(Nenmaxold))
-
-    do n=1,Nmax
+       !print*, 'eold at Nmax-1',  self%b(Nmax-1)%ein(:)
+       print *, self%b(Nmax)%ein(:), '-1', self%b(Nmax-1)%ein(:)
+       !print*, 'csold at Nmax-1',  self%b(Nmax-1)%cs(:)
+       !print*, 'cs' , self%b(Nmax)%cs(:)
+       ! stop
+    do n=1, Nmax
        im = self%b(n)%inum
        eold(1:im) = self%b(n)%ein(1:im)
        csold(1:im) = self%b(n)%cs(1:im)
-!       print*, 'CS', n, im
+
        if(n .eq. -2) then
           do j=1,im
              print*, 'intp_cs():', n, eold(j), csold(j)
           enddo
        endif
+       ! print*, n, 'start interp 575 states.f90'
        call INTRPL(im,eold(1:im),csold(1:im),Nenfine,enfine,csnew)
+       
        do j=1,Nenfine ! below the first point on the old energy grid make all CS on the new grid equal to zero
           if(enfine(j) .le. eold(1)) then
              csnew(j) = 0d0
@@ -584,7 +593,7 @@ contains
              csnew(j) = 0d0
           endif
        enddo
-       
+!       print*, n, 'end interp 575 states.f90 and calling set_cs'
 !       statetoprint = 'state1'
 !       call print_state(self%b(n),statetoprint)
        j = 0
@@ -600,7 +609,10 @@ contains
        do j=1,-im
           print*, 'intp_cs():', n, self%b(n)%stlabel, eold(j), dfold(j)
        enddo
+       print *, 'interpolating 604 (im,eold(1:im),dfold(1:im),Nenfine,enfine,dfnew)'
        call INTRPL(im,eold(1:im),dfold(1:im),Nenfine,enfine,dfnew)
+       !print*, 'done intp'
+       !print*, 'INTP ', im,Nenfine,enfine,dfnew
        do j=1,Nenfine ! below the first point on the old energy grid make all diss.fractions on the new grid equal to the value at the first point on the old grid
           if(enfine(j) .le. eold(1)) then
              dfnew(j) = dfold(1)

@@ -4,27 +4,27 @@ module mc
     public::  update_energy,init_simdata,init_particle
 	
     type, public:: particle
-        real(dp),dimension(0:30000):: energy ! The energy at each collision
-      	real(dp),dimension(0:30000):: enArr ! The energy target energy at each collision
+        real(dp),dimension(0:10000):: energy ! The energy at each collision
+      	real(dp),dimension(0:10000):: enArr ! The energy target energy at each collision
       	integer:: gen ! Which generation the particle was created in
       	integer:: colls ! Total number of collisions the particle undergoes
-      	integer,dimension(0:30000):: state ! The state selected at each collision
-      	logical,dimension(0:30000):: diss	! True if dissociation occured at that collision
+      	integer,dimension(0:10000):: state ! The state selected at each collision
+      	logical,dimension(0:10000):: diss	! True if dissociation occured at that collision
       	!real(dp),dimension(0:70000):: costheta ! Cosine of the scattering angle at each collision 
         !real(dp),dimension(0:70000):: phi     !Azimuthal scattering angle randomly generated after each collision	
-      	logical,dimension(0:30000):: Ps	! True if Ps Formation occured at that collision (only used for Ps Formation Benchmark Simulation)
+      	logical,dimension(0:10000):: Ps	! True if Ps Formation occured at that collision (only used for Ps Formation Benchmark Simulation)
         !real(dp),dimension(0:70000)::path !Stores path length after each collisions	
                  
 
         !Stores position and time of particle at each collision. First element is point of creation.
-        real(dp),dimension(0:30000)::x
-        real(dp),dimension(0:30000)::y
-        real(dp),dimension(0:30000)::z
-        real(dp),dimension(0:30000)::time
-    		real(dp),dimension(0:30000)::velx
-    		real(dp),dimension(0:30000)::vely
-    		real(dp),dimension(0:30000)::velz
-    		real(dp),dimension(0:30000)::abs_vel
+        real(dp),dimension(0:10000)::x
+        real(dp),dimension(0:10000)::y
+        real(dp),dimension(0:10000)::z
+        real(dp),dimension(0:10000)::time
+    		real(dp),dimension(0:10000)::velx
+    		real(dp),dimension(0:10000)::vely
+    		real(dp),dimension(0:10000)::velz
+    		real(dp),dimension(0:10000)::abs_vel
  
         !Stores unit vectors in coordinate system attached to each collision,
         !where the new zHat is along the final particle trajectory.
@@ -284,7 +284,7 @@ contains
     end subroutine recordEjEn
 
 	
-    subroutine update_energy(statebasis,sdcsBasis,dcsBasis,stateNum,tcs,particlebasis,partNum,cosangle,coll,ionop,enlossop,datasim,bmode,VarPs)
+    subroutine update_energy(statebasis,dcsBasis,stateNum,tcs,particlebasis,partNum,cosangle,coll,ionop,enlossop,datasim,bmode,VarPs,sdcsBasis)
         use state_class
         use totalcs_module
         use Ps_module
@@ -295,7 +295,7 @@ contains
 		
       	type(basis_state),intent(in):: statebasis
       	type(state):: selstate
-        type(basis_sdcs)::sdcsBasis
+        type(basis_sdcs),optional::sdcsBasis
         type(sdcs)::sdcsAtEIn
       	integer, intent(in):: stateNum
       	type(particle),dimension(0:1000),intent(inout):: particlebasis
@@ -762,7 +762,7 @@ contains
               if ((en <0.0_dp) .and. (statebasis%b(stateNum)%ion .eqv. .false.) ) then	
                  !excitation collision
 	            df = tcs%df(stateNum)
-              else if ((en >0.0_dp) .and. (statebasis%b(stateNum)%ion .eqv. .true.)) then
+              else if ((en >0.0_dp) .and. (statebasis%b(stateNum)%ion .eqv. .true.) .and. (data_in%posmode .eq. 0)) then
                  !Ionisation collision uses dissociative 
                  !ionisation cross sections.            
                  call getDissIonDf(dicsBasis, enIncident, df)

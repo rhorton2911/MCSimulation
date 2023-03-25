@@ -85,15 +85,14 @@ subroutine populatestates(statebasis,tcsbasis)
      if (eneV .gt. 0.0d0) then
         ion = .true.
      end if
-     ! print *, size(statebasis%b)
+     !print *, size(statebasis%b)
      print *, 'calling init state'
      call init_state(statebasis%b(i), trim(stlabel),eneV,enex,l,M,ipar,S,ion)
      print *, 'finished init state'
   enddo
 
   if (data_in%posmode .eq. 1) then
-     !Read in scaling factor
-      
+    statebasis%b(:)%inum = inum
   end if
 
 
@@ -102,7 +101,7 @@ subroutine populatestates(statebasis,tcsbasis)
   ! populate cross sections from totalcs files
   print*, 'write cross sections from totalcs files to states '
   do n=1,Nmaxall
-     
+    !print*, statebasis%b(n)%inum 
      do i=1,inum
         Nmax = tcsbasis%b(i)%Nmax
         if(n .le. Nmax) then
@@ -117,6 +116,7 @@ subroutine populatestates(statebasis,tcsbasis)
      l = 1
      if( n .eq. 1 ) l = 0  ! do not add the threshild energy for the elastic channel
      call set_cs(statebasis%b(n),inum,ar_ein,ar_cs,l) ! set CS and add a point at the threshold energy
+     !print*, statebasis%b(n)%inum 
 
   enddo
 !
@@ -139,8 +139,8 @@ subroutine populatestates(statebasis,tcsbasis)
 !        print*, TRIM(data_in%filename_df(i))
         j = LEN(TRIM(data_in%DATApath))+ 1
         print *, statebasis%b(n)%stlabel, ' COMPARE WITH ', data_in%filename_df(i)(j+4:j+10)
-        print *, data_in%filename_df(i)
-        print*, LEN(trim(adjustl(statebasis%b(n)%stlabel))), LEN(trim(adjustl(data_in%filename_df(i)(j+4:j+10))))
+        !print *, data_in%filename_df(i)
+        !print*, LEN(trim(adjustl(statebasis%b(n)%stlabel))), LEN(trim(adjustl(data_in%filename_df(i)(j+4:j+10))))
         if(trim(adjustl(statebasis%b(n)%stlabel(1:4))) .eq. trim(adjustl(data_in%filename_df(i)(j+4:j+10)))) then 
            print*,'found for diss.fractions:', n,statebasis%b(n)%stlabel  
            exit
@@ -258,23 +258,44 @@ subroutine populatestates(statebasis,tcsbasis)
      enddo
   else
      !Read in scaling factor
+  ! allocate(statebasis%b(statebasis%n)%ein(statebasis%b(statebasis%n)%inum)
 
 
+     call readPsFormCs(psFormation, statebasis%b(statebasis%n)%ein, statebasis%b(statebasis%n)%inum, "../data-2/PsTCS.txt")
+     
+!     print*, 'psF%inum', psFormation%inum
+     psFormation%inum = inum
+!     print*, 'stlabel: ', psFormation%stlabel
+!     print*, 'en: ', psFormation%en
+!     print*, 'enex: ', psFormation%enex
+!     print*, 'el, m: ', psFormation%l, psFormation%m
+!     print*, 'ipar, spin, inum: ', psFormation%ipar, psFormation%spin, psFormation%inum
+!     print*, 'cs: ', psFormation%cs
 
+!     print*, 'ALLOCATE psFormation%df'
+     allocate(psFormation%df(inum), psFormation%eindf(inum), psFormation%enEin(inum))
+     psFormation%df(:) = 0
+     psFormation%enEin(:) = 0
+     psFormation%df(:) = psFormation%eindf(:)
+!     print*, 'enEin: ', psFormation%enEin
+!     print*, 'df, eindf: ', psFormation%df, psFormation%eindf
 
+!     print*, 'resolved, v, dissThresh: ', psFormation%resolved, psFormation%v, psFormation%dissThresh
+!     print*, 'ion: ', psFormation%ion
+!     print*, 'psform: ', psFormation%psFormation
 
-     call readPsFormCs(psFormation,"../data-2/unscaled_cs.txt")
      call addState(psFormation, statebasis)
-    
+!     stop 
   end if
- 
+!  print*, 'statebasis%n', statebasis%n 
 
-  !do i=1, statebasis%n
-  !   if (associated(statebasis%b(i)%cs)) print*, "CS"
-  !   if (associated(statebasis%b(i)%ein)) print*, "EIN"
-  !   if (associated(statebasis%b(i)%df)) print*, "DF"
-  !   if (associated(statebasis%b(i)%eindf)) print*, "EINDF"
-  !end do
+!  do i=1, statebasis%n
+    ! print*, statebasis%b(i)%inum
+    ! if (associated(statebasis%b(i)%cs)) print*, "CS"
+    ! if (associated(statebasis%b(i)%ein)) print*, "EIN"
+    ! if (associated(statebasis%b(i)%df)) print*, "DF"
+    ! if (associated(statebasis%b(i)%eindf)) print*, "EINDF"
+!  end do
 
 end subroutine populatestates
 

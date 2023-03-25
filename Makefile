@@ -71,7 +71,7 @@ numbers.o : numbers.f90
 input_data.o : input_data.f90 numbers.f90
 	$(FC) $a -c input_data.f90
 
-main.o :  main.f90 numbers.f90 input_data.f90 sdcs.f90 states.f90 totalcs.f90 tcstostate.f90
+main.o :  main.f90 numbers.f90 input_data.f90 sdcs.f90 states.f90 totalcs.f90 tcstostate.f90 simulation.f90
 	$(FC) $a -c main.f90
 
 states.o : states.f90 numbers.f90 input_data.f90 

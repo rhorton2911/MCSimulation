@@ -313,7 +313,7 @@ contains
     read(nfile,*)
     read(nfile,*)
     read(nfile,*)   str1, str2, str3, str4, en
-!    print*, 'en=', en
+    print*, 'en=', en
     self%en_incident = en
     read(nfile,*)
     i = 0
@@ -349,7 +349,7 @@ contains
 
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  !Subroutine: readPsTcs
+  !Subroutine: readPsCs
   !Purpose: reads in positron scattering electron excitation cross 
   !         section file, columns are state excitation cross sections
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -406,13 +406,17 @@ contains
   !Purpose: reads in positronium formation cross sections into
   !         the input state type
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  subroutine readPsFormCs(self,filename)
+  subroutine readPsFormCs(self, input, inum, filename)
     use state_class
     implicit none
     type(state):: self
-    character(len=25), intent(in):: filename
-    integer:: ii, lines=0, IERR=0, numcols
+    real(dp), dimension(:), intent(in) :: input
+    ! type(basis_state) :: statebasis
+    integer, intent(in) :: inum
+    character(len=19), intent(in):: filename
+    integer:: ii, lines=0, IERR=0
     real(dp) :: eneV, enex
+    real(dp), dimension(:), allocatable :: X, Y
     character(len=50) :: a
 
     open(60,file=filename)
@@ -426,21 +430,36 @@ contains
     lines = lines - 1
     IERR = 0
     rewind(60)
-    allocate(self%ein(lines), self%cs(lines))
+    
+    allocate(X(lines), Y(lines))
+    allocate(self%cs(inum))
 
     eneV = -1.0_dp
     enex = -1.0_dp
 
     call init_state(self,"PsFormation",eneV,enex,-1,-1,-1,1.0d0,.false.)
     self%psFormation = .true.
-   
-    read(60,*)
+    allocate(self%ein(inum))
+    self%ein(:)=input(:) 
+    read(60, *)
+    read(60, *)
+    read(60, *)
     do ii = 1, lines
-       read(60,*) self%ein(ii), self%cs(ii)
+       read(60,*) X(ii), Y(ii)
+    end do
+    
+    !print *, 'inum, inputsize, self%cs size', inum, size(input), size(self%cs)
+    !print*, 'intrpl PsForm'
+    call INTRPL(lines, X, Y, inum, input, self%cs) 
+    do ii=1, inum
+        if (input(ii) .lt. X(1)) then
+                self%cs(ii) = 0
+        else if (input(ii) .gt. X(lines)) then
+                self%cs(ii) = 0 
+        end if
     end do
     
     close(60)
-
    end subroutine readPsFormCs
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

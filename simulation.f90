@@ -1,12 +1,15 @@
-subroutine mcsimulation(data_input,statebasis,sdcsBasis,eldcs,dicsBasis,VarPs,datamc,min_ein)
+module simulation
+contains
+
+subroutine mcsimulation(data_input,statebasis,VarPs,datamc,min_ein,sdcsBasis,eldcs,dicsBasis)
 
     use numbers
     use state_class        ! defines states (and basis of them) with operations on them
     use totalcs_module     !  reading totalcs files
     use sdcs_module
-    use mc					! contains subroutines for monte carlo simulation
+    use mc		! contains subroutines for monte carlo simulation
     use input_data	! contains input such as incident energy, benchmark mode
-	  use ParticleDynamics	
+    use ParticleDynamics
     use Ps_module
     use dcs_module         ! deals with elastic DCS
     use OMP_LIB
@@ -15,12 +18,13 @@ subroutine mcsimulation(data_input,statebasis,sdcsBasis,eldcs,dicsBasis,VarPs,da
     
     ! Input Parameters
     real(dp):: en_incident
-	  real(dp), dimension(3)::Elec
+    real(dp), dimension(3)::Elec
     type(input), intent(in):: data_input
     type(basis_state),intent(in):: statebasis
-    type(basis_dcs),intent(in):: eldcs    ! keep elastic DCS here
-    type(basis_dics),intent(in):: dicsBasis !Dissociative ionisation CS and DF  
-    type(basis_sdcs)::sdcsBasis
+
+    type(basis_dcs),intent(in), optional:: eldcs    ! keep elastic DCS here
+    type(basis_dics),intent(in), optional:: dicsBasis !Dissociative ionisation CS and DF  
+    type(basis_sdcs), optional ::sdcsBasis
     !!type(basis_vcs)::vcsBasis
                                  
     ! Monte Carlo Parameters
@@ -46,6 +50,7 @@ subroutine mcsimulation(data_input,statebasis,sdcsBasis,eldcs,dicsBasis,VarPs,da
     !real(dp), external :: OMP_GET_WTIME 
     
     !---------------- Monte Carlo Simulation ------------------------------------------------------------------
+    print*, "SIM START"
     print*, 'commencing mcsimulation', data_input%energyeV
     totalSims = int(real(data_input%totalSims)/real(data_input%totalVariations))
     print *, 'totalSims done'
@@ -60,7 +65,7 @@ subroutine mcsimulation(data_input,statebasis,sdcsBasis,eldcs,dicsBasis,VarPs,da
     ionop = 'positive ionisation energy' 
     ionop = data_input%ionop
     diss = .false.
-	  Elec = (/1.0E-8, 1.0E-8, 1.0E-8/) !Hard code electric field for testing purposes
+    Elec = (/1.0E-8, 1.0E-8, 1.0E-8/) !Hard code electric field for testing purposes
    
     
     datamc%numSims = totalSims
@@ -100,7 +105,11 @@ subroutine mcsimulation(data_input,statebasis,sdcsBasis,eldcs,dicsBasis,VarPs,da
    	            particlebasis(partNum)%colls = coll ! Updates the amount of collisions the particle has gone through
    		          datasim%collPerGen(particlebasis(partNum)%gen) = datasim%collPerGen(particlebasis(partNum)%gen) + 1 ! Updates collisions per generation				
 
-            		call collisionsimulation(data_input,statebasis,sdcsBasis,dicsBasis,particlebasis,partNum,coll,simIndex,datasim,ionop,bmode,VarPs,eldcs,Elec)
+                        if (data_in%posmode .eq. 0) then
+            		   call collisionsimulation(data_input,statebasis,Elec,particlebasis,partNum,coll,simIndex,datasim,ionop,bmode,VarPs,eldcs,sdcsBasis,dicsBasis)
+                        else
+            		   call collisionsimulation(data_input,statebasis,Elec,particlebasis,partNum,coll,simIndex,datasim,ionop,bmode,VarPs)
+                        end if
             		!call timeElapsed(e_energy(x), scattEvent, cs_Ps, cs_el, cs_ion, cs_exc, duration)		
             		!tResTemp = tResTemp + duration
 				
@@ -112,7 +121,11 @@ subroutine mcsimulation(data_input,statebasis,sdcsBasis,eldcs,dicsBasis,VarPs,da
 	           do while((particlebasis(partNum)%energy(coll).GE. cutoffEn) .AND. (particlebasis(partNum)%energy(coll) .LE. 700)) 				                               
 	              particlebasis(partNum)%colls = coll ! Updates the amount of collisions the particle has gone through	
 		            datasim%collPerGen(particlebasis(partNum)%gen) = datasim%collPerGen(particlebasis(partNum)%gen) + 1	! Updates collisions per generation			
-		            call collisionsimulation(data_input,statebasis,sdcsBasis,dicsBasis,particlebasis,partNum,coll,simIndex,datasim,ionop,bmode,VarPs,eldcs,Elec)
+                            if (data_in%posmode .eq. 0) then
+		               call collisionsimulation(data_input,statebasis,Elec,particlebasis,partNum,coll,simIndex,datasim,ionop,bmode,VarPs,eldcs,sdcsBasis,dicsBasis)
+                            else
+		               call collisionsimulation(data_input,statebasis,Elec,particlebasis,partNum,coll,simIndex,datasim,ionop,bmode,VarPs)
+                            end if
 		            coll = coll + 1 ! Increment to consider the next collision		
 	           end do
 	        end if
@@ -162,7 +175,7 @@ end subroutine mcsimulation
 
 
 
-subroutine collisionsimulation(data_input,statebasis,sdcsBasis,dicsBasis,particlebasis,partNum,coll,simIndex,datasim,ionop,bmode,VarPs,eldcs,Elec)
+subroutine collisionsimulation(data_input,statebasis,Elec,particlebasis,partNum,coll,simIndex,datasim,ionop,bmode,VarPs,eldcs,sdcsBasis,dicsBasis)
     use numbers
     use state_class        ! defines states (and basis of them) with operations on them
     use sdcs_module
@@ -176,22 +189,23 @@ subroutine collisionsimulation(data_input,statebasis,sdcsBasis,dicsBasis,particl
     use dcs_module
 
     implicit none
-    type(input), intent(in)::data_input	 
+    type(input), intent(in)::data_input
     type(particle),dimension(0:1000):: particlebasis
     integer,intent(in):: partNum,coll
     integer:: simIndex
     type(simdata),intent(inout):: datasim
     type(basis_state),intent(in):: statebasis
-    type(basis_dics),intent(in):: dicsBasis 
     character (len=60),intent(in):: ionop
-    type(basis_dcs),intent(in):: eldcs    ! keep elastic DCS here
-    type(basis_sdcs)::sdcsBasis
-	  real(dp), dimension(3),intent(in)::Elec
+
+    type(basis_dics),intent(in),optional:: dicsBasis 
+    type(basis_dcs),intent(in),optional:: eldcs    ! keep elastic DCS here
+    type(basis_sdcs),optional::sdcsBasis
+    real(dp), dimension(3),intent(in)::Elec
     !type(basis_vcs)::vcsBasis
     type(totalcs):: tcs
     integer:: stateNum
     type(dcs):: dcsaten
-    real(dp):: cosangle, randNum, phi, path	
+    real(dp):: cosangle, randNum, phi, path
     real(dp):: mass
 
     ! For Ps Benchmark Simulation
@@ -210,15 +224,17 @@ subroutine collisionsimulation(data_input,statebasis,sdcsBasis,dicsBasis,particl
 
        !call get_dcsatein(eldcs,particlebasis(partNum)%energy(coll),dcsaten)
        !particlebasis(partNum)%theta(coll) = dcsaten%avang
-       if ( data_input%angleop .eq. 1 ) then
-          !Use mean scattering angle
-          call getAvAngle(eldcs,particlebasis(partNum)%energy(coll),cosangle)                                           
-          !particlebasis(partNum)%costheta(coll) = cosangle ! Set the angle for the current collision
-          !print*, particlebasis(partNum)%energy(coll)
-       else if ( data_input%angleop .eq. 2 ) then
-          !Select cos(angle) from differential cross sections(DCS)
-          call selectAngle(eldcs,particlebasis(partNum)%energy(coll),cosangle)
-          !particlebasis(partNum)%costheta(coll) = cosangle
+       if (data_in%posmode .eq. 0) then
+         if ( data_input%angleop .eq. 1 ) then
+            !Use mean scattering angle
+            call getAvAngle(eldcs,particlebasis(partNum)%energy(coll),cosangle)                                           
+            !particlebasis(partNum)%costheta(coll) = cosangle ! Set the angle for the current collision
+            !print*, particlebasis(partNum)%energy(coll)
+         else if ( data_input%angleop .eq. 2 ) then
+            !Select cos(angle) from differential cross sections(DCS)
+            call selectAngle(eldcs,particlebasis(partNum)%energy(coll),cosangle)
+            !particlebasis(partNum)%costheta(coll) = cosangle
+         end if
        end if
        !Randomly generate an azimuthal scattering angle.
        call RANDOM_NUMBER(randNum)
@@ -230,9 +246,12 @@ subroutine collisionsimulation(data_input,statebasis,sdcsBasis,dicsBasis,particl
        !call update_position(particlebasis(partNum,rad,costheta,phi,coll)   !Update particle position
 
        call E_Field(particlebasis(partNum),path,cosangle,phi,coll,datasim,Elec,particleBasis(partNum)%energy(coll),statebasis)
-       call update_energy(statebasis,sdcsBasis,eldcs,stateNum,tcs,particlebasis,partNum,cosangle,coll,ionop,data_input%enlossop,datasim,bmode,VarPs) ! Update the energy of the particle	
-
-
+       if (data_in%posmode .eq. 0) then
+             call update_energy(statebasis,eldcs,stateNum,tcs,particlebasis,partNum,cosangle,coll,ionop,data_input%enlossop,datasim,bmode,VarPs,sdcsBasis) ! Update the energy of the particle	
+       else
+             call update_energy(statebasis,eldcs,stateNum,tcs,particlebasis,partNum,cosangle,coll,ionop,data_input%enlossop,datasim,bmode,VarPs) 
+       endif
+       
        !call testInputData(statebasis, eldcs, sdcsBasis, statebasis%b(1)%ein, size(statebasis%b(1)%ein))
 	     !Where should E_Field go exactly?
 	   
@@ -254,10 +273,14 @@ subroutine collisionsimulation(data_input,statebasis,sdcsBasis,dicsBasis,particl
 	  datasim%tRes = datasim%tRes + datasim%tResTemp
 	  print*, datasim%tRes
        else 
-          call update_energy(statebasis,sdcsBasis,eldcs,stateNum,tcs,particlebasis,partNum,cosangle,coll,ionop,data_input%enlossop,datasim,bmode,VarPs) ! Update the energy of the particle
-	        call timeElapsed(particlebasis(partNum)%energy(coll),tcs%CS(stateNum),datasim)
-	        datasim%tResTemp = datasim%tResTemp + datasim%duration
-	        !print*, 'TResTemp', datasim%tResTemp
+          if (data_in%posmode .eq. 0) then
+                call update_energy(statebasis,eldcs,stateNum,tcs,particlebasis,partNum,cosangle,coll,ionop,data_input%enlossop,datasim,bmode,VarPs,sdcsBasis) ! Update the energy of the particle
+	  else
+                call update_energy(statebasis,eldcs,stateNum,tcs,particlebasis,partNum,cosangle,coll,ionop,data_input%enlossop,datasim,bmode,VarPs)
+          endif 
+          call timeElapsed(particlebasis(partNum)%energy(coll),tcs%CS(stateNum),datasim)
+          datasim%tResTemp = datasim%tResTemp + datasim%duration
+          !print*, 'TResTemp', datasim%tResTemp
        end if		
 	
        !print*, stateNum, tcs%CS(1), tcs%CS(2), tcs%CS(3), tcs%CS(4)
@@ -271,3 +294,5 @@ subroutine collisionsimulation(data_input,statebasis,sdcsBasis,dicsBasis,particl
        print*, 'At collision ',coll,'for particle ',partNum,' in sim ',simIndex,'the postCollEnergy was (eV) ',particlebasis(partNum)%energy(coll + 1)
     end if						
 end subroutine collisionsimulation
+
+end module simulation

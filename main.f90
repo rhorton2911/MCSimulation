@@ -8,7 +8,7 @@ program main
   use Ps_module			 ! handles all Ps Formation Benchmark subroutines
   use dcs_module         ! deals with elastic DCS
   use mc
-
+  use simulation
 
 
  
@@ -145,11 +145,15 @@ program main
 
      ! Read all totalcs files	 
      call new_totalcsbasis(tcsbasis,data_in%Ntcs,data_in%tcstype)
-     print *, data_in%Ntcs
+     !print *, data_in%Ntcs
      do n=1,data_in%Ntcs
         filename = TRIM(data_in%filename_tcs(n))
         print*,'filename=', filename
-        call  read_totalcs(tcsbasis%b(n),data_in%tcstype,filename)
+        !if (data_in%posmode .eq. 1) then
+        !  call readPsCs(tcsbasis, data_in%tcstype, filename)
+        !else
+          call  read_totalcs(tcsbasis%b(n),data_in%tcstype,filename)
+        !end if
         print*, 'tcs%Nmax = ', tcsbasis%b(n)%Nmax
 	!    call print_tcs(tcsbasis%b(n))
      enddo
@@ -157,6 +161,7 @@ program main
      !Set-up the states data structure - from the totalcs file with the largest energy
      Nmaxall = tcsbasis%b(data_in%Ntcs)%Nmax
      if (data_in%posmode .eq. 1) then
+      
         Nmaxall = 1013
      endif
      call new_basis(statebasis,Nmaxall,data_in%tcstype)
@@ -218,9 +223,11 @@ program main
      do n=1,-Nenfine
         print*,  '-->> enfine() =', n, enfine(n)
      enddo
+ 
+     call  intp_cs(statebasis,Nenfine,enfine)
+        
 
      if (data_in%posmode .eq. 0) then
-        call  intp_cs(statebasis,Nenfine,enfine)
         call make_elastic_dcs(eldcs,size(statebasis%b(1)%ein),statebasis%b(1)%ein)
         
         !Fills an array of dcs type in the basis_dcs defined over a fine
@@ -333,9 +340,13 @@ program main
     !----------------------------  Run MonteCarlo Simulation ----------------
     !Each variation is run data_in%totalSims/data_in%totalVariations times.
     print*, "MC"
-     call mcsimulation(data_in,statebasis,sdcsBasis,eldcs,dicsBasis,VarPs,datamcArray(ii),min_ein)
+     !if (data_in%posmode .eq. 1) then
+        call mcsimulation(data_in,statebasis,VarPs,datamcArray(ii),min_ein)
+     !else
+     !   call mcsimulation(data_in,statebasis,VarPs,datamcArray(ii),min_ein,sdcsBasis,eldcs,dicsBasis)
+     !endif
     !----------------------------  END MonteCarlo Simulation ----------------
-
+    print *, "called mcsimulation"
     !-Restore input data to what it was before modification-----------------
     !Scaling back down is given by scaling by percentage p' = -p/(1+p/100), where
     !p is the original percentage (e.g. p=5.0) scaled up.
@@ -389,7 +400,7 @@ program main
   call destruct_input(data_in)
   call destructDicsBasis(dicsBasis)
   call destructSdcsBasis(sdcsBasis)
-
+  print *, 'end of program'
   stop
 end program main
 !

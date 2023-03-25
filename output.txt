@@ -1,0 +1,76 @@
+ program runtime(s)  0.70385694503784180     
+ inital particle energy (eV)   500.00000000000000     
+ total number of simulations                 1000
+ ionisation treatment: state_distribution                                          
+ max number collisions (all sims):                    30
+ ave collisional ionisations   4.1149997711181641     
+ ave collisional excitations   3.6099998950958252     
+ ave elastic collisions   0.0000000000000000     
+ ave dissociations (tot)  0.91699999570846558     
+ vibrationally resolved:                     0
+ highest number of generations                    0
+ ave number of generations  0.82400000095367432     
+ reciprocal of mean energy per ion pair:   8.2299995422363287E-003
+ average incident particle final radius:  0.18634728493632549     
+ average B1Su excitations per ion pair:  0.30814096651363071     
+ average C1Pu excitations per ion pair:  0.32102066912482125     
+ average singlet excitations per ion pair:  0.87727827360604793     
+ average triplet excitations per ion pair:   0.0000000000000000     
+ average X1Sg(v=1) excitations:   0.0000000000000000     
+ average X1Sg(v=2) excitations:   0.0000000000000000     
+ average ratio of X1Sg(v=2) to (v=1) excitations   0.0000000000000000     
+ number of positronium formation occurences:                   932
+ ------------------------------------------------------------
+ generation:                    0
+ ave number of ionisation collisions:   0.0000000000000000     
+ ave number of excitation collisions:   3.6099998950958252     
+ ave number of elastic collisions:   0.0000000000000000     
+ ave number of collisions:   8.6569995880126953     
+ ave number of dissociations:  0.91699999570846558     
+ ------------------------------------------------
+ secondary total:
+ ave number of electrons:   0.0000000000000000     
+ ave energy of electrons (eV):   0.0000000000000000     
+ ave number of ionisation collisions:   0.0000000000000000     
+ ave number of excitation collisions:   0.0000000000000000     
+ ave number of elastic collisions:   0.0000000000000000     
+ ave number of collisions:   0.0000000000000000     
+ ave number of dissociations:   0.0000000000000000     
+ _________________________________________________
+ dissociative effects:
+ ave dissociations per ion pair (total):   0.22284326773104296     
+ ave dissociations per ion pair (primary):   0.22284326773104296     
+ ave dissociations per ion pair (secondary):    0.0000000000000000     
+ ave dissociations per ion pair (singlet):   0.22284326773104296     
+ ave dissociations per ion pair (triplet):    0.0000000000000000     
+ ave dissociations per ion pair (b3Su):    0.0000000000000000     
+ ave dissociations per ion pair (B1Su):    8.2381532321797304E-002
+ ave dissociations per ion pair (C1Pu):    5.8323211527408578E-003
+ ave dissociations (total):   0.91699999570846558     
+ ave dissociations (primary):    0.0000000000000000     
+ ave dissociations (secondary):   0.91699999570846558     
+ ave dissociations (singlet):   0.91700000000000004     
+ ave dissociations (triplet):    0.0000000000000000     
+ ave dissociations (b3Su):    0.0000000000000000     
+ ave dissociations (B1Su):   0.33900000000000002     
+ ave dissociations (C1Pu):    2.4000000000000000E-002
+ ave kinetic energy released through dissociation (eV):    0.0000000000000000     
+ ave fraction of primary energy deposited as heat through dissociation:    0.0000000000000000     
+ ave fraction of primary energy lost through vibrational excitation:    0.0000000000000000     
+ ave total number of bound excitations in vcs mode:    0.0000000000000000     
+ ------------------------------------------------
+ ------------------------------------------------
+ ions: total, gen0,gen1,etc
+   4.1149997711181641     
+ exc: total, gen0,gen1,etc
+   3.6099998950958252     
+   3.6099998950958252     
+ el: total, gen0,gen1,etc
+   0.0000000000000000     
+   0.0000000000000000     
+ colls: gen0,gen1,etc
+   8.6569995880126953     
+ diss: total, gen0,gen1,etc
+  0.91699999570846558     
+  0.91699999570846558     
+ enpergen: gen0,gen1,etc
